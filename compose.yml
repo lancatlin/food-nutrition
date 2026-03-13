@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:18.3
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./db:/var/lib/postgresql
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer:5.3.0
+    ports:
+      - 8080:8080
