@@ -5,6 +5,7 @@ from datetime import datetime, date, timezone
 from typing import Optional
 from database import get_db
 from models import PantryItem, Ingredient
+import re
 
 router = APIRouter(prefix="/pantry", tags=["pantry"])
 
@@ -13,26 +14,24 @@ router = APIRouter(prefix="/pantry", tags=["pantry"])
 
 class PantryItemCreate(BaseModel):
     ingredient_name: str
-    quantity_unit: Optional[str] = None
     expiry_date: Optional[date] = None
 
 
 class PantryItemUpdate(BaseModel):
-    quantity_unit: Optional[str] = None
     expiry_date: Optional[date] = None
 
 
 class PantryItemResponse(BaseModel):
     id: int
     ingredient_name: str
-    quantity_unit: Optional[str]
     expiry_date: Optional[date]
     added_at: datetime
 
     class Config:
         from_attributes = True
 
-# GET /pantry-items
+
+# GET /pantry-items 
 
 @router.get("/pantry-items", response_model=list[PantryItemResponse])
 def get_pantry_items(db: Session = Depends(get_db)):
@@ -45,7 +44,6 @@ def get_pantry_items(db: Session = Depends(get_db)):
         PantryItemResponse(
             id=item.id,
             ingredient_name=item.ingredient.name,
-            quantity_unit=item.quantity_unit,
             expiry_date=item.expiry_date,
             added_at=item.added_at,
         )
@@ -60,20 +58,20 @@ def create_pantry_items(items: list[PantryItemCreate], db: Session = Depends(get
     created = []
 
     for item_data in items:
-        # Get or create the ingredient
+        clean_name = re.sub(r"\s+", " ", item_data.ingredient_name.strip().lower())
+
         ingredient = (
             db.query(Ingredient)
-            .filter(Ingredient.name == item_data.ingredient_name)
+            .filter(Ingredient.name == clean_name)
             .first()
         )
         if not ingredient:
-            ingredient = Ingredient(name=item_data.ingredient_name)
+            ingredient = Ingredient(name=clean_name)
             db.add(ingredient)
-            db.flush()  # get the ingredient.id without committing yet
+            db.flush()
 
         pantry_item = PantryItem(
             ingredient_id=ingredient.id,
-            quantity_unit=item_data.quantity_unit,
             expiry_date=item_data.expiry_date,
             added_at=datetime.now(timezone.utc),
         )
@@ -84,7 +82,6 @@ def create_pantry_items(items: list[PantryItemCreate], db: Session = Depends(get
             PantryItemResponse(
                 id=pantry_item.id,
                 ingredient_name=ingredient.name,
-                quantity_unit=pantry_item.quantity_unit,
                 expiry_date=pantry_item.expiry_date,
                 added_at=pantry_item.added_at,
             )
@@ -106,8 +103,6 @@ def update_pantry_item(item_id: int, updates: PantryItemUpdate, db: Session = De
     if not item:
         raise HTTPException(status_code=404, detail="Pantry item not found")
 
-    if updates.quantity_unit is not None:
-        item.quantity_unit = updates.quantity_unit
     if updates.expiry_date is not None:
         item.expiry_date = updates.expiry_date
 
@@ -118,7 +113,6 @@ def update_pantry_item(item_id: int, updates: PantryItemUpdate, db: Session = De
     return PantryItemResponse(
         id=item.id,
         ingredient_name=item.ingredient.name,
-        quantity_unit=item.quantity_unit,
         expiry_date=item.expiry_date,
         added_at=item.added_at,
     )
