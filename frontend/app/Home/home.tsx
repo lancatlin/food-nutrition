@@ -1,13 +1,6 @@
 import { useState } from "react";
 import type { Route } from "../routes/+types/home";
 
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "What to Cook Today?" },
-    { name: "description", content: "Food Nutrition App" },
-  ];
-}
-
 type FridgeItem = {
   id: number;
   name: string;

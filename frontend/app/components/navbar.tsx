@@ -18,7 +18,7 @@ export default function NavBar() {
 
         {/* Scan — center FAB */}
         <NavLink
-          to="/add-items"
+          to="/pantry/add"
           onClick={() => setActiveTab("scan")}
           className="flex flex-col items-center gap-1 -mt-6"
         >
