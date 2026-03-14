@@ -65,10 +65,13 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <button className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5">
-              <i className="fa-solid fa-plus text-xs" />
-              Add
-            </button>
+            <NavLink
+              to="/pantry/add"
+              className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5"
+            >
+              <i className="fa-solid fa-camera text-xs" />
+              Scan Receipt
+            </NavLink>
           </div>
 
           {/* Progress Bar */}
