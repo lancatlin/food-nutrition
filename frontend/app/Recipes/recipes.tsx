@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Recipe } from "~/components/recipe.types";
+import type { Recipe } from "~/types";
 import { recipes } from "~/components/recipe.data";
 import RecipeCard from "~/components/RecipeCard";
 import RecipeDetail from "~/components/RecipeDetail";
@@ -18,11 +18,13 @@ export default function Recipes() {
       </h1>
 
       <div className="flex flex-col gap-4 px-4">
-        {recipes.map(recipe => (
+        {recipes.map((recipe) => (
           <RecipeCard
             key={recipe.id}
             recipe={recipe}
-            previewIngredients={recipe.ingredients.slice(0, 5).map(i => i.split(",")[0])}
+            previewIngredients={recipe.ingredients
+              .slice(0, 5)
+              .map((i) => i.split(",")[0])}
             onClick={() => setSelected(recipe)}
           />
         ))}

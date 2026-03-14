@@ -1,23 +1,20 @@
 import { useState } from "react";
-import type { Route } from "../routes/+types/home";
 import { NavLink } from "react-router";
+import type { PantryItem } from "~/types";
 
-type FridgeItem = {
-  id: number;
-  name: string;
-  emoji: string;
+type FridgeItem = PantryItem & {
   checked: boolean;
 };
 
 const initialItems: FridgeItem[] = [
-  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true },
-  { id: 2, name: "Lettuce", emoji: "🥬", checked: true },
-  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true },
-  { id: 4, name: "Milk", emoji: "🥛", checked: false },
-  { id: 5, name: "Eggs", emoji: "🥚", checked: true },
-  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true },
-  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true },
-  { id: 8, name: "Garlic", emoji: "🧄", checked: false },
+  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true, expiry: null },
+  { id: 2, name: "Lettuce", emoji: "🥬", checked: true, expiry: null },
+  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true, expiry: null },
+  { id: 4, name: "Milk", emoji: "🥛", checked: false, expiry: null },
+  { id: 5, name: "Eggs", emoji: "🥚", checked: true, expiry: null },
+  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true, expiry: null },
+  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true, expiry: null },
+  { id: 8, name: "Garlic", emoji: "🧄", checked: false, expiry: null },
 ];
 
 export default function Home() {

@@ -1,14 +1,8 @@
 import { useState, useEffect } from "react";
 import Calendar from "~/components/Calendar";
+import type { PantryItem } from "~/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type PantryItem = {
-  id: number;
-  name: string;
-  emoji: string;
-  expiry: Date | null;
-};
 
 type Toast = {
   item: PantryItem;
