@@ -51,7 +51,6 @@ class Recipe(Base):
     __tablename__ = "recipe"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     diet_label = Column(String, nullable=True)
     health_label = Column(String, nullable=True)
     recipe_name = Column(String, nullable=False)
