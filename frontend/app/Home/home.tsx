@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Route } from "../routes/+types/home";
-import NavTab from "~/components/navtab";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -8,8 +7,6 @@ export function meta({}: Route.MetaArgs) {
     { name: "description", content: "Food Nutrition App" },
   ];
 }
-
-type TabId = "fridge" | "scan" | "recipes";
 
 type FridgeItem = {
   id: number;
@@ -31,7 +28,6 @@ const initialItems: FridgeItem[] = [
 
 export default function Home() {
   const [items, setItems] = useState<FridgeItem[]>(initialItems);
-  const [activeTab, setActiveTab] = useState<TabId>("fridge");
 
   const toggle = (id: number) =>
     setItems((prev) =>
@@ -43,8 +39,7 @@ export default function Home() {
   const checkedCount = items.filter((i) => i.checked).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background-accent flex flex-col">
-      {/* Header */}
+    <>
       <div className="px-6 pt-14 pb-4">
         <p className="text-primary-dark text-sm font-semibold tracking-widest uppercase mb-1">
           <i className="fa-solid fa-sun mr-2" />
@@ -148,48 +143,6 @@ export default function Home() {
           Select ingredients to get personalized recipe suggestions
         </p>
       </div>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border shadow-xl shadow-border-strong/20 px-6 pb-6 pt-3">
-        <div className="flex items-center justify-around max-w-sm mx-auto">
-          <NavTab
-            icon="box-archive"
-            label="Fridge"
-            active={activeTab === "fridge"}
-            onClick={() => setActiveTab("fridge")}
-          />
-
-          {/* Scan — center FAB */}
-          <button
-            onClick={() => setActiveTab("scan")}
-            className="flex flex-col items-center gap-1 -mt-6"
-          >
-            <div
-              className={`w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center transition-all ${
-                activeTab === "scan"
-                  ? "bg-gradient-to-br from-primary to-secondary shadow-primary-tint"
-                  : "bg-gradient-to-br from-primary-light to-secondary-light shadow-primary-tint"
-              }`}
-            >
-              <i className="fa-solid fa-camera text-white text-2xl" />
-            </div>
-            <span
-              className={`text-[10px] font-semibold ${
-                activeTab === "scan" ? "text-primary" : "text-fg-muted"
-              }`}
-            >
-              Scan
-            </span>
-          </button>
-
-          <NavTab
-            icon="book-open"
-            label="Recipes"
-            active={activeTab === "recipes"}
-            onClick={() => setActiveTab("recipes")}
-          />
-        </div>
-      </nav>
-    </div>
+    </>
   );
 }
