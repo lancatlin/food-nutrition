@@ -4,13 +4,37 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Primary — emerald */
+  --color-primary:       #10b981; /* emerald-500 */
+  --color-primary-dark:  #059669; /* emerald-600 */
+  --color-primary-light: #34d399; /* emerald-400 */
+  --color-primary-tint:  #d1fae5; /* emerald-100 — light bg/shadow */
+
+  /* Secondary — teal */
+  --color-secondary:       #2dd4bf; /* teal-400 */
+  --color-secondary-dark:  #14b8a6; /* teal-500 */
+  --color-secondary-light: #5eead4; /* teal-300 */
+
+  /* Surfaces & backgrounds */
+  --color-surface:           #ffffff;
+  --color-background:        #f8fafc; /* slate-50  */
+  --color-background-accent: #ecfdf5; /* emerald-50 */
+
+  /* Borders */
+  --color-border:        #f1f5f9; /* slate-100 */
+  --color-border-strong: #cbd5e1; /* slate-300 */
+
+  /* Text */
+  --color-fg:           #1e293b; /* slate-800 */
+  --color-fg-secondary: #334155; /* slate-700 */
+  --color-fg-muted:     #94a3b8; /* slate-400 */
+
+  /* Accent */
+  --color-accent: #fde047; /* yellow-300 */
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-surface;
 }
