@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 
 from database import Base, engine
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routers import pantry_items, receipt, recipes
-from pantry_items import router as pantry_router
-app.include_router(pantry_router)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,6 +15,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Food Nutrition App", lifespan=lifespan)
 
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(recipes.router)
 app.include_router(receipt.router)

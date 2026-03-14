@@ -1,24 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
+import { getPantryList } from "~/services/pantry";
 import type { PantryItem } from "~/types";
 
 type FridgeItem = PantryItem & {
   checked: boolean;
 };
 
-const initialItems: FridgeItem[] = [
-  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true, expiry: null },
-  { id: 2, name: "Lettuce", emoji: "🥬", checked: true, expiry: null },
-  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true, expiry: null },
-  { id: 4, name: "Milk", emoji: "🥛", checked: false, expiry: null },
-  { id: 5, name: "Eggs", emoji: "🥚", checked: true, expiry: null },
-  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true, expiry: null },
-  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true, expiry: null },
-  { id: 8, name: "Garlic", emoji: "🧄", checked: false, expiry: null },
-];
-
 export default function Home() {
-  const [items, setItems] = useState<FridgeItem[]>(initialItems);
+  const [items, setItems] = useState<FridgeItem[]>([]);
+
+  useEffect(() => {
+    getPantryList().then((pantry) =>
+      setItems(pantry.map((i) => ({ ...i, checked: true }))),
+    );
+  }, []);
 
   const toggle = (id: number) =>
     setItems((prev) =>

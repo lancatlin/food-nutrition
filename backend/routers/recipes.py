@@ -3,7 +3,7 @@ import asyncio
 from database import get_db
 from deps import get_current_user
 from fastapi import APIRouter, Depends
-from models import Recipe, User
+from models import Recipe, SavedRecipe, User
 from pydantic.fields import Field
 from pydantic.main import BaseModel
 from recipe_client import get_recipes
@@ -32,7 +32,12 @@ async def get_recipes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    stmt = select(Recipe).where(Recipe.user_id == current_user.id)
+    stmt = (
+        select(Recipe)
+        .join(SavedRecipe, Recipe.id == SavedRecipe.recipe_id)
+        .where(SavedRecipe.user_id == current_user.id)
+    )
+
     return list(db.scalars(stmt))
 
 
