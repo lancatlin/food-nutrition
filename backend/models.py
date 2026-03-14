@@ -18,7 +18,7 @@ class User(Base):
     saved_recipes = relationship("SavedRecipe", back_populates="user")
 
     pantry_items = relationship("PantryItem", back_populates="user")
-    recipes = relationship("Recipe", back_populates="user")
+
 
 
 class Ingredient(Base):
@@ -51,7 +51,6 @@ class Recipe(Base):
     __tablename__ = "recipe"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     diet_label = Column(String, nullable=True)
     health_label = Column(String, nullable=True)
     recipe_name = Column(String, nullable=False)
@@ -64,7 +63,6 @@ class Recipe(Base):
     cuisine_type = Column(String, nullable=True)
     saved_by = relationship("SavedRecipe", back_populates="recipe")
 
-    user = relationship("User", back_populates="recipes")
     ingredients = relationship("RecipeIngredient", back_populates="recipe")
 
 
