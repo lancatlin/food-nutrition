@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Route } from "../routes/+types/home";
+import { NavLink } from "react-router";
 
 type FridgeItem = {
   id: number;
@@ -123,13 +124,16 @@ export default function Home() {
         </div>
 
         {/* Inspire Me Button */}
-        <button className="mt-6 w-full bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark active:scale-[0.98] transition-all text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-primary-tint flex items-center justify-center gap-3">
+        <NavLink
+          to="/recipes/add"
+          className="mt-6 w-full bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark active:scale-[0.98] transition-all text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-primary-tint flex items-center justify-center gap-3"
+        >
           <i className="fa-solid fa-wand-magic-sparkles text-accent" />
           Inspire Me
           <span className="bg-white/20 text-xs font-semibold px-2 py-0.5 rounded-full">
             AI
           </span>
-        </button>
+        </NavLink>
 
         <p className="text-center text-fg-muted text-xs mt-3">
           <i className="fa-solid fa-circle-info mr-1" />

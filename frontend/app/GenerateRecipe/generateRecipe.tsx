@@ -1,24 +1,18 @@
 import { useState, useEffect } from "react";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type PageState = "generating" | "results" | "detail";
-
-type Recipe = {
-  id: number;
-  title: string;
-  subtitle: string;
-  tags: string[];
-  color: string;        // gradient for placeholder hero
-  emoji: string;
-  ingredients: string[];
-  instructions: string[];
-};
+import type { Recipe } from "~/components/recipe.types";
+import RecipeCard from "~/components/RecipeCard";
+import RecipeDetail from "~/components/RecipeDetail";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const usedIngredients = [
-  "Chicken Breast", "Avocado", "Eggs", "Tomato", "Bacon", "Spinach", "Onion",
+  "Chicken Breast",
+  "Avocado",
+  "Eggs",
+  "Tomato",
+  "Bacon",
+  "Spinach",
+  "Onion",
 ];
 
 const recipes: Recipe[] = [
@@ -99,159 +93,73 @@ const recipes: Recipe[] = [
   },
 ];
 
-// ─── Components ───────────────────────────────────────────────────────────────
-
-function RecipeHero({ recipe, className = "" }: { recipe: Recipe; className?: string }) {
-  return (
-    <div className={`bg-gradient-to-br ${recipe.color} flex items-center justify-center ${className}`}>
-      <span className="text-7xl drop-shadow-lg">{recipe.emoji}</span>
-    </div>
-  );
-}
-
-function TagPill({ label, filled = false }: { label: string; filled?: boolean }) {
-  return (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-        filled
-          ? "bg-primary-tint text-primary border-primary-tint"
-          : "border-border-strong text-fg-secondary"
-      }`}
-    >
-      {label}
-    </span>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+type PageState = "generating" | "results" | "detail";
 
 export default function GenerateRecipe() {
   const [pageState, setPageState] = useState<PageState>("generating");
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [visibleCount, setVisibleCount] = useState(0);
 
-  // Generating → stream in results one by one
   useEffect(() => {
     if (pageState !== "generating") return;
     const t = setTimeout(() => setPageState("results"), 1800);
     return () => clearTimeout(t);
   }, [pageState]);
 
-  // Stream cards in with a stagger
   useEffect(() => {
-    if (pageState !== "results") return;
-    if (visibleCount >= recipes.length) return;
-    const t = setTimeout(() => setVisibleCount(n => n + 1), 400);
+    if (pageState !== "results" || visibleCount >= recipes.length) return;
+    const t = setTimeout(() => setVisibleCount((n) => n + 1), 400);
     return () => clearTimeout(t);
   }, [pageState, visibleCount]);
 
-  const openDetail = (recipe: Recipe) => {
-    setSelected(recipe);
-    setPageState("detail");
-  };
-
-  // ── Detail ──────────────────────────────────────────────────────────────────
   if (pageState === "detail" && selected) {
     return (
-      <div className="flex-1 overflow-y-auto pb-28">
-        {/* Hero */}
-        <div className="relative">
-          <RecipeHero recipe={selected} className="w-full h-56" />
-          <button
-            onClick={() => setPageState("results")}
-            className="absolute top-4 left-4 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white transition-colors"
-          >
-            <i className="fa-solid fa-arrow-left text-sm" />
-          </button>
-        </div>
-
-        <div className="px-5 pt-5 pb-4">
-          <h1 className="text-2xl font-extrabold text-fg leading-snug">{selected.title}</h1>
-          <p className="text-fg-muted text-sm mt-1">{selected.subtitle}</p>
-
-          <div className="flex flex-wrap gap-2 mt-3">
-            {selected.tags.map(tag => <TagPill key={tag} label={tag} />)}
-          </div>
-        </div>
-
-        <div className="h-px bg-border mx-5" />
-
-        {/* Ingredients */}
-        <div className="px-5 py-4">
-          <h2 className="text-xl font-extrabold text-fg mb-3">Ingredients</h2>
-          <ul className="space-y-1.5">
-            {selected.ingredients.map((ing, i) => (
-              <li key={i} className="text-fg-secondary text-sm flex items-start gap-2">
-                <span className="text-primary mt-0.5 shrink-0">•</span>
-                {ing}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="h-px bg-border mx-5" />
-
-        {/* Instructions */}
-        <div className="px-5 py-4">
-          <h2 className="text-xl font-extrabold text-fg mb-3">Instruction</h2>
-          <ol className="space-y-2.5">
-            {selected.instructions.map((step, i) => (
-              <li key={i} className="text-fg-secondary text-sm flex items-start gap-3">
-                <span className="text-primary font-bold shrink-0">{i + 1}.</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
+      <RecipeDetail recipe={selected} onBack={() => setPageState("results")} />
     );
   }
 
-  // ── Generating / Results ─────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col pt-14 pb-28 overflow-y-auto">
       <h1 className="text-4xl font-extrabold text-fg px-5 mb-6 leading-tight">
-        Finding<br />Recipes...
+        Finding
+        <br />
+        Recipes...
       </h1>
 
-      {/* Generating state — spinner + ingredient list */}
       {pageState === "generating" && (
         <div className="flex flex-col items-center gap-5 px-5 mt-4">
           <div className="w-14 h-14 rounded-full border-4 border-primary-tint border-t-primary animate-spin" />
-          <p className="text-fg-muted text-sm">Extracting Food Items from Receipt</p>
-
+          <p className="text-fg-muted text-sm">
+            Extracting Food Items from Receipt
+          </p>
           <div className="w-full bg-background rounded-2xl px-5 py-4 mt-2">
             <p className="text-fg font-bold mb-3">Ingredients Included</p>
             <ul className="space-y-2">
-              {usedIngredients.map(name => (
-                <li key={name} className="text-fg-secondary text-sm">{name}</li>
+              {usedIngredients.map((name) => (
+                <li key={name} className="text-fg-secondary text-sm">
+                  {name}
+                </li>
               ))}
             </ul>
           </div>
         </div>
       )}
 
-      {/* Results state — cards stream in */}
       {pageState === "results" && (
         <div className="flex flex-col gap-4 px-4">
-          {recipes.slice(0, visibleCount).map(recipe => (
-            <button
+          {recipes.slice(0, visibleCount).map((recipe) => (
+            <RecipeCard
               key={recipe.id}
-              onClick={() => openDetail(recipe)}
-              className="bg-surface rounded-2xl overflow-hidden shadow-md shadow-border-muted text-left transition-transform active:scale-[0.98]"
-            >
-              <RecipeHero recipe={recipe} className="w-full h-44" />
-              <div className="px-4 py-3">
-                <p className="text-fg-muted text-xs mb-1">{usedIngredients.slice(0, 5).join(", ")}</p>
-                <h3 className="text-fg font-bold leading-snug mb-2">{recipe.title}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {recipe.tags.map(tag => <TagPill key={tag} label={tag} filled />)}
-                </div>
-              </div>
-            </button>
+              recipe={recipe}
+              previewIngredients={usedIngredients.slice(0, 5)}
+              onClick={() => {
+                setSelected(recipe);
+                setPageState("detail");
+              }}
+            />
           ))}
-
-          {/* Spinner while more cards stream in */}
           {visibleCount < recipes.length && (
             <div className="flex justify-center py-4">
               <div className="w-10 h-10 rounded-full border-4 border-primary-tint border-t-primary animate-spin" />
