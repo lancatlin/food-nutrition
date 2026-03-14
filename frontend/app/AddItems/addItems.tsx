@@ -4,6 +4,7 @@ import Calendar from "~/components/Calendar";
 import type { PantryItem } from "~/types";
 import { uploadReceipt } from "~/services/receipt";
 import type { ProductSummary } from "~/services/receipt";
+import { addPantryItems } from "~/services/pantry";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,13 +36,21 @@ export default function AddItems() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const mutation = useMutation({
+  const mutationUpload = useMutation({
     mutationFn: uploadReceipt,
     onSuccess: (data) => setItems(toFoodItems(data.items)),
   });
 
+  const mutationAddPantry = useMutation({
+    mutationFn: addPantryItems,
+  });
+
   const handleFile = (file: File | undefined) => {
-    if (file) mutation.mutate(file);
+    if (file) mutationUpload.mutate(file);
+  };
+
+  const handleAddPantry = () => {
+    mutationAddPantry.mutate(items.filter((i) => i.checked));
   };
 
   const calendarItem = items.find((i) => i.id === calendarFor) ?? null;
@@ -60,7 +69,7 @@ export default function AddItems() {
 
   // ── Upload state ────────────────────────────────────────────────────────────
 
-  if (mutation.status === "idle" || mutation.status === "error") {
+  if (mutationUpload.status === "idle" || mutationUpload.status === "error") {
     return (
       <div className="flex-1 flex flex-col px-6 pt-14 pb-28">
         <h1 className="text-4xl font-extrabold text-fg leading-tight mb-8">
@@ -92,7 +101,7 @@ export default function AddItems() {
             </button>
           </div>
 
-          {mutation.status === "error" && (
+          {mutationUpload.status === "error" && (
             <p className="text-red-500 text-sm text-center">
               Upload failed. Please try again.
             </p>
@@ -121,7 +130,7 @@ export default function AddItems() {
 
   // ── Processing state ────────────────────────────────────────────────────────
 
-  if (mutation.status === "pending") {
+  if (mutationUpload.status === "pending") {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-6 pb-28">
         <h1 className="text-4xl font-extrabold text-fg">Processing...</h1>
@@ -184,7 +193,10 @@ export default function AddItems() {
             ))}
           </ul>
         </div>
-        <button className="mt-5 mx-2 bg-background hover:bg-primary-tint transition-colors text-fg font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 border border-border">
+        <button
+          onClick={handleAddPantry}
+          className="mt-5 mx-2 bg-background hover:bg-primary-tint transition-colors text-fg font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 border border-border"
+        >
           <i className="fa-solid fa-plus text-primary" />
           Add to Inventory
         </button>

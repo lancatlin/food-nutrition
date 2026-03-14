@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
-import { getPantryList } from "~/services/pantry";
+import { getPantryItems } from "~/services/pantry";
 import type { PantryItem } from "~/types";
 
 type FridgeItem = PantryItem & {
@@ -11,7 +11,7 @@ export default function Home() {
   const [items, setItems] = useState<FridgeItem[]>([]);
 
   useEffect(() => {
-    getPantryList().then((pantry) =>
+    getPantryItems().then((pantry) =>
       setItems(pantry.map((i) => ({ ...i, checked: true }))),
     );
   }, []);
