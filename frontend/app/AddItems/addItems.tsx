@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import Calendar from "~/components/Calendar";
 import type { PantryItem } from "~/types";
 import { uploadReceipt } from "~/services/receipt";
-import type { ProductSummary } from "~/services/receipt";
+import type { ProductSummary } from "~/types";
 import { addPantryItems } from "~/services/pantry";
+import { toast } from "react-toastify";
+import PantryItemList from "~/components/PantryItemList";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -13,10 +14,6 @@ type FoodItem = PantryItem & {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatExpiry(date: Date): string {
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-}
 
 function toFoodItems(products: ProductSummary[]): FoodItem[] {
   return products.map((p, i) => ({
@@ -32,7 +29,7 @@ function toFoodItems(products: ProductSummary[]): FoodItem[] {
 
 export default function AddItems() {
   const [items, setItems] = useState<FoodItem[]>([]);
-  const [calendarFor, setCalendarFor] = useState<number | null>(null);
+  const selectedIdsRef = useRef<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +40,7 @@ export default function AddItems() {
 
   const mutationAddPantry = useMutation({
     mutationFn: addPantryItems,
+    onError: (err) => toast.error(err.message),
   });
 
   const handleFile = (file: File | undefined) => {
@@ -50,17 +48,8 @@ export default function AddItems() {
   };
 
   const handleAddPantry = () => {
-    mutationAddPantry.mutate(items.filter((i) => i.checked));
+    mutationAddPantry.mutate(items.filter((i) => selectedIdsRef.current.has(i.id)));
   };
-
-  const calendarItem = items.find((i) => i.id === calendarFor) ?? null;
-
-  const toggleItem = (id: number) =>
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item,
-      ),
-    );
 
   const setExpiry = (id: number, date: Date | null) =>
     setItems((prev) =>
@@ -145,74 +134,31 @@ export default function AddItems() {
   // ── Results state ───────────────────────────────────────────────────────────
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 flex flex-col px-4 pt-14 pb-28">
-        <h1 className="text-4xl font-extrabold text-fg leading-tight px-2 mb-4">
-          Add New
-          <br />
-          Food Items
-        </h1>
-        <div className="bg-background rounded-3xl overflow-hidden">
-          <ul className="divide-y divide-border">
-            {items.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-9 h-9 rounded-full bg-primary-tint flex items-center justify-center text-base shrink-0">
-                  {item.emoji}
-                </div>
-                <span
-                  className={`flex-1 font-medium text-sm ${item.checked ? "text-fg-secondary" : "text-fg-muted"}`}
-                >
-                  {item.name}
-                </span>
-                <button
-                  onClick={() => setCalendarFor(item.id)}
-                  className="flex items-center gap-1.5 text-xs font-semibold shrink-0 transition-colors"
-                >
-                  {item.expiry && (
-                    <span className="text-primary">
-                      {formatExpiry(item.expiry)}
-                    </span>
-                  )}
-                  <i
-                    className={`fa-regular fa-calendar text-base ${item.expiry ? "text-primary" : "text-fg-muted"}`}
-                  />
-                </button>
-                <div
-                  onClick={() => toggleItem(item.id)}
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 cursor-pointer transition-all ${
-                    item.checked
-                      ? "bg-primary border-primary"
-                      : "border-border-strong hover:border-primary-light"
-                  }`}
-                >
-                  {item.checked && (
-                    <i className="fa-solid fa-check text-white text-[10px]" />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <button
-          onClick={handleAddPantry}
-          className="mt-5 mx-2 bg-background hover:bg-primary-tint transition-colors text-fg font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 border border-border"
-        >
-          <i className="fa-solid fa-plus text-primary" />
-          Add to Inventory
-        </button>
-      </div>
+    <div className="flex-1 flex flex-col pt-14 pb-28">
+      <h1 className="text-4xl font-extrabold text-fg leading-tight px-6 mb-4">
+        Add New
+        <br />
+        Food Items
+      </h1>
 
-      {/* ── Calendar Modal ─────────────────────────────────────────────────── */}
-      {calendarFor !== null && calendarItem && (
-        <Calendar
-          initial={calendarItem.expiry}
-          onConfirm={(date) => {
-            setExpiry(calendarFor, date);
-            setCalendarFor(null);
-          }}
-          onCancel={() => setCalendarFor(null)}
-        />
-      )}
+      <PantryItemList
+        items={items}
+        showCheckbox
+        modifyExpiry
+        defaultChecked={items.map((i) => i.checked)}
+        onSetExpiry={setExpiry}
+        onSelectionChange={(selected) => {
+          selectedIdsRef.current = new Set(selected.map((i) => i.id));
+        }}
+      />
+
+      <button
+        onClick={handleAddPantry}
+        className="mt-5 mx-6 bg-background hover:bg-primary-tint transition-colors text-fg font-semibold py-4 rounded-2xl flex items-center justify-center gap-2 border border-border"
+      >
+        <i className="fa-solid fa-plus text-primary" />
+        Add to Inventory
+      </button>
     </div>
   );
 }

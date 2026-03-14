@@ -1,15 +1,17 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { getPantryItems, removePantryItem } from "~/services/pantry";
+import { useEffect, useRef, useState } from "react";
 import type { PantryItem } from "~/types";
 import { getFoodEmoji } from "~/utils/emoji";
 import Calendar from "./Calendar";
 
 export type PantryItemListProp = {
+  items: PantryItem[];
   showRemove?: boolean;
   modifyExpiry?: boolean;
   showCheckbox?: boolean;
-  onSubmit?: (checkedItems: PantryItem[]) => void;
+  defaultChecked?: boolean[];
+  onRemove?: (item: PantryItem) => void;
+  onSetExpiry?: (id: number, date: Date | null) => void;
+  onSelectionChange?: (selected: PantryItem[]) => void;
 };
 
 type Toast = {
@@ -52,34 +54,25 @@ function formatExpiry(expiry: Date): string {
 
 const TOAST_DURATION = 4000;
 
-export default function PantryItemList(prop: PantryItemListProp) {
+export default function PantryItemList({
+  items,
+  showRemove,
+  modifyExpiry,
+  showCheckbox,
+  defaultChecked,
+  onRemove,
+  onSetExpiry,
+  onSelectionChange,
+}: PantryItemListProp) {
   const [toast, setToast] = useState<Toast | null>(null);
   const [calendarFor, setCalendarFor] = useState<number | null>(null);
-  const [selection, setSelection] = useState<boolean[]>([]);
+  const [selection, setSelection] = useState<boolean[]>(() =>
+    defaultChecked ?? Array(items.length).fill(true),
+  );
 
-  const query = useQuery({
-    queryKey: ["pantry-items"],
-    queryFn: getPantryItems,
-  });
-
-  const remove = useMutation({
-    mutationFn: removePantryItem,
-    onSuccess: () => query.refetch(),
-  });
-
-  const removeItem = (item: PantryItem) => {
-    remove.mutate(item.id);
-    if (toast) clearTimeout(toast.timeoutId);
-    const timeoutId = setTimeout(() => setToast(null), TOAST_DURATION);
-    setToast({ item, timeoutId });
-  };
-
-  const undoRemove = () => {
-    if (!toast) return;
-    clearTimeout(toast.timeoutId);
-    // setItems((prev) => sortItems([...prev, toast.item]));
-    setToast(null);
-  };
+  // Track item IDs to detect when a completely new set of items is loaded
+  const itemIds = items.map((i) => i.id).join(",");
+  const prevItemIds = useRef(itemIds);
 
   useEffect(
     () => () => {
@@ -89,21 +82,38 @@ export default function PantryItemList(prop: PantryItemListProp) {
   );
 
   useEffect(() => {
-    setSelection(Array(query.data?.length).fill(true));
-  }, [query.data]);
+    if (itemIds === prevItemIds.current) return;
+    prevItemIds.current = itemIds;
+    const next = defaultChecked ?? Array(items.length).fill(true);
+    setSelection(next);
+    onSelectionChange?.(items.filter((_, i) => next[i]));
+  }, [itemIds]);
 
   const toggle = (i: number) => {
-    setSelection(selection.map((x, j) => (i == j ? !x : x)));
+    const next = selection.map((x, j) => (i === j ? !x : x));
+    setSelection(next);
+    onSelectionChange?.(items.filter((_, j) => next[j]));
   };
 
-  const setExpiry = (id: number, date: Date | null) => console.log(id, date);
+  const removeItem = (item: PantryItem) => {
+    onRemove?.(item);
+    if (toast) clearTimeout(toast.timeoutId);
+    const timeoutId = setTimeout(() => setToast(null), TOAST_DURATION);
+    setToast({ item, timeoutId });
+  };
 
-  const calendarItem = query.data?.find((i) => i.id === calendarFor) ?? null;
+  const undoRemove = () => {
+    if (!toast) return;
+    clearTimeout(toast.timeoutId);
+    setToast(null);
+  };
+
+  const calendarItem = items.find((i) => i.id === calendarFor) ?? null;
 
   return (
     <>
       <div className="flex-1 px-4 overflow-y-auto">
-        {query.data?.length === 0 ? (
+        {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
             <span className="text-5xl">🎉</span>
             <p className="text-fg-muted text-sm">Your pantry is empty</p>
@@ -111,7 +121,7 @@ export default function PantryItemList(prop: PantryItemListProp) {
         ) : (
           <div className="bg-background rounded-3xl overflow-hidden">
             <ul className="divide-y divide-border">
-              {query.data?.map((item, i) => {
+              {items.map((item, i) => {
                 const status = expiryStatus(item.expiry);
                 const styles = statusStyles[status];
                 return (
@@ -131,9 +141,7 @@ export default function PantryItemList(prop: PantryItemListProp) {
 
                     {/* Expiry — tap to edit */}
                     <button
-                      onClick={() =>
-                        prop.modifyExpiry && setCalendarFor(item.id)
-                      }
+                      onClick={() => modifyExpiry && setCalendarFor(item.id)}
                       className={`flex items-center gap-1.5 shrink-0 transition-colors hover:opacity-70 ${styles.text}`}
                     >
                       {item.expiry && (
@@ -146,7 +154,7 @@ export default function PantryItemList(prop: PantryItemListProp) {
                       />
                     </button>
 
-                    {prop.showRemove && (
+                    {showRemove && (
                       <button
                         onClick={() => removeItem(item)}
                         className="w-7 h-7 flex items-center justify-center rounded-lg text-fg-muted hover:text-red-500 hover:bg-red-50 transition-all shrink-0 ml-1"
@@ -155,7 +163,7 @@ export default function PantryItemList(prop: PantryItemListProp) {
                         <i className="fa-solid fa-trash-can text-sm" />
                       </button>
                     )}
-                    {prop.showCheckbox && (
+                    {showCheckbox && (
                       <div
                         onClick={() => toggle(i)}
                         className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
@@ -203,7 +211,7 @@ export default function PantryItemList(prop: PantryItemListProp) {
         <Calendar
           initial={calendarItem.expiry}
           onConfirm={(date) => {
-            setExpiry(calendarFor, date);
+            onSetExpiry?.(calendarFor, date);
             setCalendarFor(null);
           }}
           onCancel={() => setCalendarFor(null)}

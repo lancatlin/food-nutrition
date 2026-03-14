@@ -1,25 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router";
 import PantryItemList from "~/components/PantryItemList";
 import { getPantryItems } from "~/services/pantry";
-import type { PantryItem } from "~/types";
-
-type FridgeItem = PantryItem & {
-  checked: boolean;
-};
-
 export default function Home() {
-  const [items, setItems] = useState<FridgeItem[]>([]);
+  const query = useQuery({
+    queryKey: ["pantry-items"],
+    queryFn: getPantryItems,
+  });
 
-  useEffect(() => {
-    getPantryItems().then((pantry) =>
-      setItems(pantry.map((i) => ({ ...i, checked: true }))),
-    );
-  }, []);
-
-  const checkedCount = items.filter((i) => i.checked).length;
-
-  const onSubmit = (items: PantryItem[]) => console.log(items);
+  const [checkedCount, setCheckedCount] = useState(0);
+  const total = query.data?.length ?? 0;
 
   return (
     <>
@@ -50,7 +41,7 @@ export default function Home() {
                   My Fridge
                 </h2>
                 <p className="text-primary-tint text-xs">
-                  {checkedCount} of {items.length} items selected
+                  {checkedCount} of {total} items selected
                 </p>
               </div>
             </div>
@@ -67,11 +58,15 @@ export default function Home() {
           <div className="h-1.5 bg-border">
             <div
               className="h-full bg-gradient-to-r from-primary-light to-secondary transition-all duration-500"
-              style={{ width: `${(checkedCount / items.length) * 100}%` }}
+              style={{ width: total > 0 ? `${(checkedCount / total) * 100}%` : "0%" }}
             />
           </div>
 
-          <PantryItemList showCheckbox onSubmit={onSubmit} />
+          <PantryItemList
+            items={query.data ?? []}
+            showCheckbox
+            onSelectionChange={(selected) => setCheckedCount(selected.length)}
+          />
         </div>
 
         {/* Inspire Me Button */}
