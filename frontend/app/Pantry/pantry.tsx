@@ -1,6 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import Calendar from "~/components/Calendar";
+import { getPantryItems } from "~/services/pantry";
 import type { PantryItem } from "~/types";
+import { getFoodEmoji } from "~/utils/emoji";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,11 +80,16 @@ function sortItems(items: PantryItem[]): PantryItem[] {
 const TOAST_DURATION = 4000;
 
 export default function Pantry() {
-  const [items, setItems] = useState<PantryItem[]>(() =>
-    sortItems(initialItems),
-  );
+  // const [items, setItems] = useState<PantryItem[]>(() =>
+  //   sortItems(initialItems),
+  // );
   const [toast, setToast] = useState<Toast | null>(null);
   const [calendarFor, setCalendarFor] = useState<number | null>(null);
+
+  const query = useQuery({
+    queryKey: ["pantry-items"],
+    queryFn: getPantryItems,
+  });
 
   useEffect(
     () => () => {
@@ -91,7 +99,7 @@ export default function Pantry() {
   );
 
   const removeItem = (item: PantryItem) => {
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
+    // setItems((prev) => prev.filter((i) => i.id !== item.id));
     if (toast) clearTimeout(toast.timeoutId);
     const timeoutId = setTimeout(() => setToast(null), TOAST_DURATION);
     setToast({ item, timeoutId });
@@ -100,25 +108,20 @@ export default function Pantry() {
   const undoRemove = () => {
     if (!toast) return;
     clearTimeout(toast.timeoutId);
-    setItems((prev) => sortItems([...prev, toast.item]));
+    // setItems((prev) => sortItems([...prev, toast.item]));
     setToast(null);
   };
 
-  const setExpiry = (id: number, date: Date | null) =>
-    setItems((prev) =>
-      sortItems(
-        prev.map((item) => (item.id === id ? { ...item, expiry: date } : item)),
-      ),
-    );
+  const setExpiry = (id: number, date: Date | null) => console.log(id, date);
 
-  const calendarItem = items.find((i) => i.id === calendarFor) ?? null;
+  const calendarItem = query.data?.find((i) => i.id === calendarFor) ?? null;
 
   return (
     <div className="flex-1 flex flex-col pt-14 pb-28">
       <h1 className="text-4xl font-extrabold text-fg px-6 mb-4">My Pantry</h1>
 
       <div className="flex-1 px-4 overflow-y-auto">
-        {items.length === 0 ? (
+        {query.data?.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-3">
             <span className="text-5xl">🎉</span>
             <p className="text-fg-muted text-sm">Your pantry is empty</p>
@@ -126,7 +129,7 @@ export default function Pantry() {
         ) : (
           <div className="bg-background rounded-3xl overflow-hidden">
             <ul className="divide-y divide-border">
-              {items.map((item) => {
+              {query.data?.map((item) => {
                 const status = expiryStatus(item.expiry);
                 const styles = statusStyles[status];
                 return (
@@ -137,7 +140,7 @@ export default function Pantry() {
                     <div
                       className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 transition-colors ${styles.avatar}`}
                     >
-                      {item.emoji}
+                      {getFoodEmoji(item.name)}
                     </div>
 
                     <span className="flex-1 font-medium text-sm text-fg-secondary">

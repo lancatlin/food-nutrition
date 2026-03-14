@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { getPantryItems } from "~/services/pantry";
 import type { PantryItem } from "~/types";
+import { getFoodEmoji } from "~/utils/emoji";
 
 type FridgeItem = PantryItem & {
   checked: boolean;
@@ -90,7 +91,7 @@ export default function Home() {
                       : "bg-border"
                   }`}
                 >
-                  {item.emoji}
+                  {getFoodEmoji(item.name)}
                 </div>
 
                 <span
