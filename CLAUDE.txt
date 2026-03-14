@@ -1,0 +1,45 @@
+# Food Nutrition App
+
+## Background
+
+According to multiple research papers (from 2009 to 2022), international students around the world have been facing a common health concern - **food malnourishment**.
+
+While many factors such as economic crisis and stress due to work are identified as causes, a lack of information about nutritional concepts has been identified as a common cause. Poor diet quality leads to malnutrition or overnutrition, increasing the risk of preventable diseases such as diabetes and obesity.
+
+## Solution
+
+Develop an application that follows the workflow below:
+
+1. Use OCR to extract food items from the user’s grocery list
+2. The food items are stored in a database. The user can (optionally) manually add the expiry date for food items that will expire soon.
+3. Our AI then creates healthy, diabetic-friendly recipes while prioritizing items that will be expiring soon.
+4. It also return the nutritional value of the recipe per 100g so the user can keep track of his calories, protein, etc…
+
+## Tech Stack
+
+* Frontend
+  * React
+  * TypeScript
+  * TailwindCSS
+  * FontAwesome
+  * Nivo Charts
+* Backend
+  * Python
+  * FastAPI
+  * SQLAlchemy
+* Recipe-AI (as a microservice)
+  * Python
+  * Transformers
+  * FastAPI
+
+## Page Design
+
+### Home `/`
+
+### Pantry Items `/pantry`
+
+### Add Items `/pantry/add`
+
+### Recipe List `/recipes/`
+
+### Generate Recipes `/recipes/new`
