@@ -1,33 +1,16 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router";
-import type { PantryItem } from "~/types";
-
-type FridgeItem = PantryItem & {
-  checked: boolean;
-};
-
-const initialItems: FridgeItem[] = [
-  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true, expiry: null },
-  { id: 2, name: "Lettuce", emoji: "🥬", checked: true, expiry: null },
-  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true, expiry: null },
-  { id: 4, name: "Milk", emoji: "🥛", checked: false, expiry: null },
-  { id: 5, name: "Eggs", emoji: "🥚", checked: true, expiry: null },
-  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true, expiry: null },
-  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true, expiry: null },
-  { id: 8, name: "Garlic", emoji: "🧄", checked: false, expiry: null },
-];
-
+import PantryItemList from "~/components/PantryItemList";
+import { getPantryItems } from "~/services/pantry";
 export default function Home() {
-  const [items, setItems] = useState<FridgeItem[]>(initialItems);
+  const query = useQuery({
+    queryKey: ["pantry-items"],
+    queryFn: getPantryItems,
+  });
 
-  const toggle = (id: number) =>
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item,
-      ),
-    );
-
-  const checkedCount = items.filter((i) => i.checked).length;
+  const [checkedCount, setCheckedCount] = useState(0);
+  const total = query.data?.length ?? 0;
 
   return (
     <>
@@ -58,7 +41,7 @@ export default function Home() {
                   My Fridge
                 </h2>
                 <p className="text-primary-tint text-xs">
-                  {checkedCount} of {items.length} items selected
+                  {checkedCount} of {total} items selected
                 </p>
               </div>
             </div>
@@ -75,52 +58,15 @@ export default function Home() {
           <div className="h-1.5 bg-border">
             <div
               className="h-full bg-gradient-to-r from-primary-light to-secondary transition-all duration-500"
-              style={{ width: `${(checkedCount / items.length) * 100}%` }}
+              style={{ width: total > 0 ? `${(checkedCount / total) * 100}%` : "0%" }}
             />
           </div>
 
-          {/* Item List */}
-          <ul className="divide-y divide-border">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                onClick={() => toggle(item.id)}
-                className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-background transition-colors group"
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all duration-200 ${
-                    item.checked
-                      ? "bg-primary-tint shadow-sm shadow-primary-tint"
-                      : "bg-border"
-                  }`}
-                >
-                  {item.emoji}
-                </div>
-
-                <span
-                  className={`flex-1 font-medium transition-colors ${
-                    item.checked
-                      ? "text-fg-secondary"
-                      : "text-fg-muted line-through"
-                  }`}
-                >
-                  {item.name}
-                </span>
-
-                <div
-                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                    item.checked
-                      ? "bg-primary border-primary shadow-sm shadow-primary-tint"
-                      : "border-border-strong group-hover:border-primary-light"
-                  }`}
-                >
-                  {item.checked && (
-                    <i className="fa-solid fa-check text-white text-xs" />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <PantryItemList
+            items={query.data ?? []}
+            showCheckbox
+            onSelectionChange={(selected) => setCheckedCount(selected.length)}
+          />
         </div>
 
         {/* Inspire Me Button */}
