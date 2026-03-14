@@ -1,6 +1,7 @@
 import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
+import { titleCase } from "~/utils/titleCase";
 
 type Props = {
   recipe: Recipe;
@@ -23,12 +24,13 @@ export default function RecipeCard({
         <p className="text-fg-muted text-xs mb-1">
           {previewIngredients.join(", ")}
         </p>
-        <h3 className="text-fg font-bold leading-snug mb-2">{recipe.title}</h3>
-        <div className="flex flex-wrap gap-2">
-          {recipe.tags.map((tag) => (
-            <TagPill key={tag} label={tag} filled />
-          ))}
-        </div>
+        <h3 className="text-fg font-bold leading-snug mb-2">{titleCase(recipe.title)}</h3>
+        {recipe.nutrition && (
+          <div className="flex flex-wrap gap-2">
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.calories_kcal)} kcal/100g`} filled />
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.protein_g)}g protein`} filled />
+          </div>
+        )}
       </div>
     </button>
   );

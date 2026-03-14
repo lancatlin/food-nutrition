@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { Recipe } from "~/types";
-import { recipes } from "~/components/recipe.data";
+import { sampleRecipe } from "~/types/recipe.data";
 import RecipeCard from "~/components/RecipeCard";
 import RecipeDetail from "~/components/RecipeDetail";
 
 export default function Recipes() {
   const [selected, setSelected] = useState<Recipe | null>(null);
+  const recipes = sampleRecipe.recipes
 
   if (selected) {
     return <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />;

@@ -1,6 +1,7 @@
 import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
+import { titleCase } from "~/utils/titleCase";
 
 type Props = {
   recipe: Recipe;
@@ -23,14 +24,18 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
 
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-2xl font-extrabold text-fg leading-snug">
-          {recipe.title}
+          {titleCase(recipe.title)}
         </h1>
-        <p className="text-fg-muted text-sm mt-1">{recipe.subtitle}</p>
-        <div className="flex flex-wrap gap-2 mt-3">
-          {recipe.tags.map((tag) => (
-            <TagPill key={tag} label={tag} />
-          ))}
-        </div>
+        {recipe.nutrition && (
+          <>
+            <p className="text-fg text-sm mt-2">{recipe.nutrition.summary}</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.calories_kcal)} kcal/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.protein_g)}g protein/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.carbs_g)}g carbs/100g`} />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="h-px bg-border mx-5" />
@@ -53,9 +58,9 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       <div className="h-px bg-border mx-5" />
 
       <div className="px-5 py-4">
-        <h2 className="text-xl font-extrabold text-fg mb-3">Instruction</h2>
+        <h2 className="text-xl font-extrabold text-fg mb-3">Method</h2>
         <ol className="space-y-2.5">
-          {recipe.instructions.map((step, i) => (
+          {recipe.method.map((step, i) => (
             <li
               key={i}
               className="text-fg-secondary text-sm flex items-start gap-3"
