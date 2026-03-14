@@ -5,10 +5,13 @@ export default function NavBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border shadow-xl shadow-border-strong/20 px-6 pb-6 pt-3">
       <div className="flex items-center justify-around max-w-sm mx-auto">
-        <NavTab to="/" icon="box-archive" label="Fridge" end />
+        <NavTab to="/pantry" icon="box-archive" label="Pantry" />
 
         {/* Scan — center FAB */}
-        <NavLink to="/pantry/add" className="flex flex-col items-center gap-1 -mt-6">
+        <NavLink
+          to="/pantry/add"
+          className="flex flex-col items-center gap-1 -mt-6"
+        >
           {({ isActive }) => (
             <>
               <div
