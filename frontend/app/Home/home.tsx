@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
+import PantryItemList from "~/components/PantryItemList";
 import { getPantryItems } from "~/services/pantry";
 import type { PantryItem } from "~/types";
-import { getFoodEmoji } from "~/utils/emoji";
 
 type FridgeItem = PantryItem & {
   checked: boolean;
@@ -17,14 +17,9 @@ export default function Home() {
     );
   }, []);
 
-  const toggle = (id: number) =>
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item,
-      ),
-    );
-
   const checkedCount = items.filter((i) => i.checked).length;
+
+  const onSubmit = (items: PantryItem[]) => console.log(items);
 
   return (
     <>
@@ -76,48 +71,7 @@ export default function Home() {
             />
           </div>
 
-          {/* Item List */}
-          <ul className="divide-y divide-border">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                onClick={() => toggle(item.id)}
-                className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-background transition-colors group"
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all duration-200 ${
-                    item.checked
-                      ? "bg-primary-tint shadow-sm shadow-primary-tint"
-                      : "bg-border"
-                  }`}
-                >
-                  {getFoodEmoji(item.name)}
-                </div>
-
-                <span
-                  className={`flex-1 font-medium transition-colors ${
-                    item.checked
-                      ? "text-fg-secondary"
-                      : "text-fg-muted line-through"
-                  }`}
-                >
-                  {item.name}
-                </span>
-
-                <div
-                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                    item.checked
-                      ? "bg-primary border-primary shadow-sm shadow-primary-tint"
-                      : "border-border-strong group-hover:border-primary-light"
-                  }`}
-                >
-                  {item.checked && (
-                    <i className="fa-solid fa-check text-white text-xs" />
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <PantryItemList showCheckbox onSubmit={onSubmit} />
         </div>
 
         {/* Inspire Me Button */}
