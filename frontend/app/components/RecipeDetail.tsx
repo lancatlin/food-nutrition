@@ -1,4 +1,4 @@
-import type { Recipe } from "./recipe.types";
+import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
 
@@ -22,10 +22,14 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       </div>
 
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-extrabold text-fg leading-snug">{recipe.title}</h1>
+        <h1 className="text-2xl font-extrabold text-fg leading-snug">
+          {recipe.title}
+        </h1>
         <p className="text-fg-muted text-sm mt-1">{recipe.subtitle}</p>
         <div className="flex flex-wrap gap-2 mt-3">
-          {recipe.tags.map(tag => <TagPill key={tag} label={tag} />)}
+          {recipe.tags.map((tag) => (
+            <TagPill key={tag} label={tag} />
+          ))}
         </div>
       </div>
 
@@ -35,7 +39,10 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
         <h2 className="text-xl font-extrabold text-fg mb-3">Ingredients</h2>
         <ul className="space-y-1.5">
           {recipe.ingredients.map((ing, i) => (
-            <li key={i} className="text-fg-secondary text-sm flex items-start gap-2">
+            <li
+              key={i}
+              className="text-fg-secondary text-sm flex items-start gap-2"
+            >
               <span className="text-primary mt-0.5 shrink-0">•</span>
               {ing}
             </li>
@@ -49,7 +56,10 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
         <h2 className="text-xl font-extrabold text-fg mb-3">Instruction</h2>
         <ol className="space-y-2.5">
           {recipe.instructions.map((step, i) => (
-            <li key={i} className="text-fg-secondary text-sm flex items-start gap-3">
+            <li
+              key={i}
+              className="text-fg-secondary text-sm flex items-start gap-3"
+            >
               <span className="text-primary font-bold shrink-0">{i + 1}.</span>
               {step}
             </li>

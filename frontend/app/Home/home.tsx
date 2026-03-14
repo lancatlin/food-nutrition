@@ -1,23 +1,20 @@
 import { useState } from "react";
-import type { Route } from "../routes/+types/home";
 import { NavLink } from "react-router";
+import type { PantryItem } from "~/types";
 
-type FridgeItem = {
-  id: number;
-  name: string;
-  emoji: string;
+type FridgeItem = PantryItem & {
   checked: boolean;
 };
 
 const initialItems: FridgeItem[] = [
-  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true },
-  { id: 2, name: "Lettuce", emoji: "🥬", checked: true },
-  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true },
-  { id: 4, name: "Milk", emoji: "🥛", checked: false },
-  { id: 5, name: "Eggs", emoji: "🥚", checked: true },
-  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true },
-  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true },
-  { id: 8, name: "Garlic", emoji: "🧄", checked: false },
+  { id: 1, name: "Chicken Breast", emoji: "🍗", checked: true, expiry: null },
+  { id: 2, name: "Lettuce", emoji: "🥬", checked: true, expiry: null },
+  { id: 3, name: "Parmesan Cheese", emoji: "🧀", checked: true, expiry: null },
+  { id: 4, name: "Milk", emoji: "🥛", checked: false, expiry: null },
+  { id: 5, name: "Eggs", emoji: "🥚", checked: true, expiry: null },
+  { id: 6, name: "Tomatoes", emoji: "🍅", checked: true, expiry: null },
+  { id: 7, name: "Olive Oil", emoji: "🫙", checked: true, expiry: null },
+  { id: 8, name: "Garlic", emoji: "🧄", checked: false, expiry: null },
 ];
 
 export default function Home() {
@@ -65,10 +62,13 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <button className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5">
-              <i className="fa-solid fa-plus text-xs" />
-              Add
-            </button>
+            <NavLink
+              to="/pantry/add"
+              className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5"
+            >
+              <i className="fa-solid fa-camera text-xs" />
+              Scan Receipt
+            </NavLink>
           </div>
 
           {/* Progress Bar */}

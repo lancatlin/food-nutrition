@@ -5,10 +5,10 @@ export default function NavBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border shadow-xl shadow-border-strong/20 px-6 pb-6 pt-3">
       <div className="flex items-center justify-around max-w-sm mx-auto">
-        <NavTab to="/" icon="box-archive" label="Fridge" end />
+        <NavTab to="/pantry" icon="box-archive" label="Pantry" />
 
         {/* Scan — center FAB */}
-        <NavLink to="/pantry/add" className="flex flex-col items-center gap-1 -mt-6">
+        <NavLink to="/" className="flex flex-col items-center gap-1 -mt-6">
           {({ isActive }) => (
             <>
               <div
@@ -18,20 +18,20 @@ export default function NavBar() {
                     : "bg-gradient-to-br from-primary-light to-secondary-light shadow-primary-tint"
                 }`}
               >
-                <i className="fa-solid fa-camera text-white text-2xl" />
+                <i className="fa-solid fa-kitchen-set text-white text-2xl" />
               </div>
               <span
                 className={`text-[10px] font-semibold ${
                   isActive ? "text-primary" : "text-fg-muted"
                 }`}
               >
-                Scan
+                Cook
               </span>
             </>
           )}
         </NavLink>
 
-        <NavTab to="/recipes/add" icon="book-open" label="Recipes" />
+        <NavTab to="/recipes" icon="book-open" label="Recipes" />
       </div>
     </nav>
   );
