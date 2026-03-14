@@ -1,0 +1,51 @@
+user
+----
+id (PK)
+email (UNIQUE)
+name
+created_at
+updated_at
+
+ingredient
+----------
+id (PK)
+name (UNIQUE)
+nutrition_json
+created_at
+updated_at
+
+
+pantry_item
+-----------
+id (PK)
+user_id (FK -> user.id)
+ingredient_id (FK -> ingredient.id)
+quantity_unit (varchar)
+expiry_date (date, nullable)
+added_at (timestamptz)
+updated_at (timestamptz)
+deleted_at(timestamp)
+
+recipe
+------
+id (PK)
+user_id (FK -> user.id)
+diet_label (varchar)
+health_label(varchar)
+recipe_name (varchar)
+image_url (varchar)
+content (text, nullable)
+created_at (timestamptz)
+updated_at (timestamptz)
+nutrition_json
+total_weight_g (numeric)
+cuisine_type(varchar)
+
+recipe_ingredient
+-----------------
+id (PK)
+recipe_id (FK -> recipe.id)
+ingredient_id (FK -> ingredient.id)
+quantity_value (numeric)
+quantity_unit (varchar)
+order_index (int)
