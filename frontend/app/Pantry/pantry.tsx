@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import Calendar from "~/components/Calendar";
-import { getPantryItems } from "~/services/pantry";
+import { getPantryItems, removePantryItem } from "~/services/pantry";
 import type { PantryItem } from "~/types";
 import { getFoodEmoji } from "~/utils/emoji";
 
@@ -91,6 +91,11 @@ export default function Pantry() {
     queryFn: getPantryItems,
   });
 
+  const remove = useMutation({
+    mutationFn: removePantryItem,
+    onSuccess: () => query.refetch(),
+  });
+
   useEffect(
     () => () => {
       if (toast) clearTimeout(toast.timeoutId);
@@ -99,7 +104,7 @@ export default function Pantry() {
   );
 
   const removeItem = (item: PantryItem) => {
-    // setItems((prev) => prev.filter((i) => i.id !== item.id));
+    remove.mutate(item.id);
     if (toast) clearTimeout(toast.timeoutId);
     const timeoutId = setTimeout(() => setToast(null), TOAST_DURATION);
     setToast({ item, timeoutId });
@@ -135,7 +140,7 @@ export default function Pantry() {
                 return (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 px-4 py-3.5"
+                    className="flex items-center gap-3 px-4 py-3.5 transition-discrete"
                   >
                     <div
                       className={`w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 transition-colors ${styles.avatar}`}

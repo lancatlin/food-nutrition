@@ -8,7 +8,7 @@ export async function getPantryItems(): Promise<PantryItem[]> {
     ({ id, ingredient_name, quantity_unit, expiry_date, added_at }: any) => ({
       id,
       name: ingredient_name,
-      expiry: new Date(expiry_date),
+      expiry: expiry_date ? new Date(expiry_date) : null,
       added_at,
     }),
   );
@@ -25,4 +25,21 @@ export async function addPantryItems(
     })),
   );
   return res.data;
+}
+
+export type PantryItemUpdatePayload = {
+  expiry: Date | null;
+};
+
+export async function updatePantryItem(
+  id: number,
+  data: PantryItemUpdatePayload,
+): Promise<PantryItem> {
+  const res = await api.put(`/pantry/pantry-items/${id}`, data);
+  return res.data;
+}
+
+export async function removePantryItem(id: number): Promise<string> {
+  await api.delete(`/pantry/pantry-items/${id}`);
+  return "success";
 }
