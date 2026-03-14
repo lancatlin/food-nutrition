@@ -1,11 +1,17 @@
 import asyncio
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from database import engine, Base
+import models
 
 from recipe_client import get_recipes
 from services.usda_nutrition import get_all_recipes_nutrition
 
 app = FastAPI(title="Food Nutrition App")
+
+@app.on_event("startup")
+def create_tables():
+    Base.metadata.create_all(bind=engine)
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import json
 import re
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import time
 
 MODEL_NAME = "Ashikan/dut-recipe-generator"
 
@@ -179,6 +180,8 @@ def generate_recipes(
 
     recipes = []
 
+    start = time.perf_counter()
+
     for i in range(num_recipes):
         print(f"Generating recipe {i + 1} / {num_recipes}...")
 
@@ -208,5 +211,8 @@ def generate_recipes(
         }
         recipes.append(result)
         print(f"  ✓  '{result['title']}' — {len(ingredient_list)} ingredients parsed.")
+
+    end = time.perf_counter()
+    print(f"\nGenerated {num_recipes} recipes in {end - start:.2f} seconds.")
 
     return recipes
