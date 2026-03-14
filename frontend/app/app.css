@@ -1,40 +1,151 @@
 @import "tailwindcss";
-@import "@fortawesome/fontawesome-free/css/all.min.css";
 
-@theme {
+/* @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
-  /* Primary — emerald */
-  --color-primary:       #10b981; /* emerald-500 */
-  --color-primary-dark:  #059669; /* emerald-600 */
-  --color-primary-light: #34d399; /* emerald-400 */
-  --color-primary-tint:  #d1fae5; /* emerald-100 — light bg/shadow */
-
-  /* Secondary — teal */
-  --color-secondary:       #2dd4bf; /* teal-400 */
-  --color-secondary-dark:  #14b8a6; /* teal-500 */
-  --color-secondary-light: #5eead4; /* teal-300 */
-
-  /* Surfaces & backgrounds */
-  --color-surface:           #ffffff;
-  --color-background:        #f8fafc; /* slate-50  */
-  --color-background-accent: #ecfdf5; /* emerald-50 */
-
-  /* Borders */
-  --color-border:        #f1f5f9; /* slate-100 */
-  --color-border-strong: #cbd5e1; /* slate-300 */
-
-  /* Text */
-  --color-fg:           #1e293b; /* slate-800 */
-  --color-fg-secondary: #334155; /* slate-700 */
-  --color-fg-muted:     #94a3b8; /* slate-400 */
-
-  /* Accent */
-  --color-accent: #fde047; /* yellow-300 */
 }
 
 html,
 body {
-  @apply bg-surface;
+  @apply bg-white dark:bg-gray-950;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+} */
+
+/* Full page */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #1e1e20;
+}
+
+.screen {
+  min-height: 100vh;
+  background: #1e1e20;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 500px;
+  min-height: 100vh;
+  background: #f3f3f3;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 228px;
+}
+
+.title {
+  margin: 0;
+  color: #000000;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.upload-box {
+  width: 360px;
+  height: 290px;
+  background: #b9c9c2;
+  border-radius: 34px;
+  margin-top: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 28px;
+}
+
+.upload-icon {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-text {
+  margin-top: 22px;
+  font-size: 31px;
+  line-height: 1.18;
+  font-weight: 400;
+  color: #1f1f1f;
+  text-align: center;
+}
+
+.upload-actions {
+  margin-top: 92px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 46px;
+}
+
+.action-btn {
+  border: none;
+  background: transparent;
+  color: #28935a;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bottom-nav {
+  height: 92px;
+  background: #b9c9c2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 62px;
+  position: relative;
+}
+
+.nav-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.camera-btn {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.left-btn,
+.right-btn {
+  width: 54px;
+  height: 54px;
 }
