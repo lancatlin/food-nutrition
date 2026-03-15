@@ -1,22 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useLoaderData } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 import RecipeDetail from "~/components/RecipeDetail";
 import { getRecipe } from "~/services/recipes";
-import { sampleRecipe } from "~/types/recipe.data";
+import { titleCase } from "~/utils/titleCase";
+import type { Recipe } from "~/types";
 
-export function meta({ params }: { params: { id: string } }) {
-  const recipe = sampleRecipe.recipes.find((r) => r.id.toString() === params.id);
-  return [{ title: recipe ? recipe.title : "Recipe Not Found" }];
+export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
+  const recipe = await getRecipe(Number(params.id));
+  return { recipe };
+}
+
+export function meta({ data }: { data: { recipe: Recipe } | undefined }) {
+  const title = data?.recipe ? titleCase(data.recipe.title) : "Recipe Details";
+  return [{ title: `${title} | Food Nutrition` }];
 }
 
 export default function RecipeDetailRoute() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const initialData = useLoaderData() as { recipe: Recipe };
 
   const { data: recipe } = useQuery({
     queryKey: ["recipes", id],
-    queryFn: () => getRecipe(Number(id || 1)),
-  })
+    queryFn: () => getRecipe(Number(id)),
+    initialData: initialData.recipe,
+  });
 
   if (!recipe) {
     return (

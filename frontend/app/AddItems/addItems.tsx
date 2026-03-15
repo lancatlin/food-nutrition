@@ -37,6 +37,7 @@ export default function AddItems() {
 
   const mutationUpload = useMutation({
     mutationFn: uploadReceipt,
+    onError: (err) => toast.error(err.message),
     onSuccess: (data) => setItems(toFoodItems(data.items)),
   });
 
