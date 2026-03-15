@@ -2,11 +2,11 @@ import type { AggregatedBill } from "~/types";
 import { api } from "./api";
 
 export async function uploadReceipt(file: File): Promise<AggregatedBill> {
-  // const form = new FormData();
-  // form.append("file", file);
-  // const res = await api.post<AggregatedBill>("/receipts/upload", form);
-  // return res.data;
-  return mockUploadReceipt();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post<AggregatedBill>("/receipts/upload", form);
+  return res.data;
+  // return mockUploadReceipt();
 }
 
 const mockData: AggregatedBill = {

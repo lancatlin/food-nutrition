@@ -3,8 +3,9 @@ import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
 import { titleCase } from "~/utils/titleCase";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getPantryItems } from "~/services/pantry";
+import { saveRecipe } from "~/services/recipes";
 
 type Props = {
   recipe: Recipe;
@@ -16,6 +17,13 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
   const { data: pantryItems } = useQuery({
     queryKey: ["pantry-items"],
     queryFn: getPantryItems,
+  })
+
+  const { mutate: save } = useMutation({
+    mutationFn: () => saveRecipe(recipe.id),
+    onSuccess: () => {
+      setIsStarred(true);
+    }
   })
 
   const ingredients = pantryItems?.map((item) => item.name.toLowerCase()) || [];
@@ -41,7 +49,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
           <i className="fa-solid fa-arrow-left text-sm" />
         </button>
         <button
-          onClick={() => setIsStarred(!isStarred)}
+          onClick={() => save()}
           className="absolute top-4 right-4 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white transition-colors"
         >
           <i className={`${isStarred ? "fa-solid text-yellow-400" : "fa-regular text-white"} fa-star text-sm`} />
@@ -72,13 +80,13 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       <div className="px-5 py-4">
         <h2 className="text-xl font-extrabold text-fg mb-3">Ingredients</h2>
         <ul className="space-y-1.5">
-          {recipe.ingredients.map((ing, i) => (
+          {recipe.nutrition?.ingredients.map((ing, i) => (
             <li
               key={i}
-              className={`text-sm flex items-start gap-2 ${checkAvailable(ing) ? "text-primary" : "text-fg"}`}
+              className={`text-sm flex items-start gap-2 ${checkAvailable(ing.ingredient) ? "text-primary" : "text-fg"}`}
             >
               <span className="text-primary mt-0.5 shrink-0">•</span>
-              {ing}
+              {ing.ingredient}
             </li>
           ))}
         </ul>
