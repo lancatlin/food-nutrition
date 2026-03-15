@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function RecipeDetail({ recipe, onBack }: Props) {
+  const [isStarred, setIsStarred] = useState(false);
   const { data: pantryItems } = useQuery({
     queryKey: ["pantry-items"],
     queryFn: getPantryItems,
@@ -37,6 +39,12 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
           className="absolute top-4 left-4 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white transition-colors"
         >
           <i className="fa-solid fa-arrow-left text-sm" />
+        </button>
+        <button
+          onClick={() => setIsStarred(!isStarred)}
+          className="absolute top-4 right-4 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white transition-colors"
+        >
+          <i className={`${isStarred ? "fa-solid text-yellow-400" : "fa-regular text-white"} fa-star text-sm`} />
         </button>
       </div>
 
