@@ -1,5 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import RecipeDetail from "~/components/RecipeDetail";
+import { getRecipe } from "~/services/recipes";
 import { sampleRecipe } from "~/types/recipe.data";
 
 export function meta({ params }: { params: { id: string } }) {
@@ -10,7 +12,11 @@ export function meta({ params }: { params: { id: string } }) {
 export default function RecipeDetailRoute() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const recipe = sampleRecipe.recipes.find((r) => r.id.toString() === id);
+
+  const { data: recipe } = useQuery({
+    queryKey: ["recipes", id],
+    queryFn: () => getRecipe(Number(id || 1)),
+  })
 
   if (!recipe) {
     return (
