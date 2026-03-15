@@ -1,15 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import type { Recipe } from "~/types";
-import { recipes } from "~/components/recipe.data";
+import { sampleRecipe } from "~/types/recipe.data";
 import RecipeCard from "~/components/RecipeCard";
 import RecipeDetail from "~/components/RecipeDetail";
 
 export default function Recipes() {
-  const [selected, setSelected] = useState<Recipe | null>(null);
-
-  if (selected) {
-    return <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />;
-  }
+  const navigate = useNavigate();
+  const recipes = sampleRecipe.recipes;
 
   return (
     <div className="flex-1 flex flex-col pt-14 pb-28 overflow-y-auto">
@@ -25,7 +23,7 @@ export default function Recipes() {
             previewIngredients={recipe.ingredients
               .slice(0, 5)
               .map((i) => i.split(",")[0])}
-            onClick={() => setSelected(recipe)}
+            onClick={() => navigate(`/recipes/${recipe.id}`)}
           />
         ))}
       </div>

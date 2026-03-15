@@ -3,13 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router";
 import PantryItemList from "~/components/PantryItemList";
 import { getPantryItems } from "~/services/pantry";
+import ScanReceiptButton from "~/components/ScanReceiptButton";
 export default function Home() {
   const query = useQuery({
     queryKey: ["pantry-items"],
     queryFn: getPantryItems,
   });
 
-  const [checkedCount, setCheckedCount] = useState(0);
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
   const total = query.data?.length ?? 0;
 
   return (
@@ -41,37 +42,31 @@ export default function Home() {
                   My Fridge
                 </h2>
                 <p className="text-primary-tint text-xs">
-                  {checkedCount} of {total} items selected
+                  {selectedNames.length} of {total} items selected
                 </p>
               </div>
             </div>
-            <NavLink
-              to="/pantry/add"
-              className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5"
-            >
-              <i className="fa-solid fa-camera text-xs" />
-              Scan Receipt
-            </NavLink>
+            <ScanReceiptButton variant="ghost" />
           </div>
 
           {/* Progress Bar */}
           <div className="h-1.5 bg-border">
             <div
               className="h-full bg-gradient-to-r from-primary-light to-secondary transition-all duration-500"
-              style={{ width: total > 0 ? `${(checkedCount / total) * 100}%` : "0%" }}
+              style={{ width: total > 0 ? `${(selectedNames.length / total) * 100}%` : "0%" }}
             />
           </div>
 
           <PantryItemList
             items={query.data ?? []}
             showCheckbox
-            onSelectionChange={(selected) => setCheckedCount(selected.length)}
+            onSelectionChange={(selected) => setSelectedNames(selected.map(s => s.name))}
           />
         </div>
 
         {/* Inspire Me Button */}
         <NavLink
-          to="/recipes/add"
+          to={`/recipes/add?ingredients=${encodeURIComponent(selectedNames.join(","))}`}
           className="mt-6 w-full bg-gradient-to-r from-primary to-secondary hover:from-primary-dark hover:to-secondary-dark active:scale-[0.98] transition-all text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-primary-tint flex items-center justify-center gap-3"
         >
           <i className="fa-solid fa-wand-magic-sparkles text-accent" />

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { PantryItem } from "~/types";
 import { getFoodEmoji } from "~/utils/emoji";
 import Calendar from "./Calendar";
+import { titleCase } from "~/utils/titleCase";
 
 export type PantryItemListProp = {
   items: PantryItem[];
@@ -72,7 +73,7 @@ export default function PantryItemList({
 
   // Track item IDs to detect when a completely new set of items is loaded
   const itemIds = items.map((i) => i.id).join(",");
-  const prevItemIds = useRef(itemIds);
+  const prevItemIds = useRef("");
 
   useEffect(
     () => () => {
@@ -136,7 +137,7 @@ export default function PantryItemList({
                     </div>
 
                     <span className="flex-1 font-medium text-sm text-fg-secondary">
-                      {item.name}
+                      {titleCase(item.name)}
                     </span>
 
                     {/* Expiry — tap to edit */}
@@ -166,11 +167,10 @@ export default function PantryItemList({
                     {showCheckbox && (
                       <div
                         onClick={() => toggle(i)}
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                          selection[i]
-                            ? "bg-primary border-primary shadow-sm shadow-primary-tint"
-                            : "border-border-strong group-hover:border-primary-light"
-                        }`}
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${selection[i]
+                          ? "bg-primary border-primary shadow-sm shadow-primary-tint"
+                          : "border-border-strong group-hover:border-primary-light"
+                          }`}
                       >
                         {selection[i] && (
                           <i className="fa-solid fa-check text-white text-xs" />
@@ -187,11 +187,10 @@ export default function PantryItemList({
 
       {/* Toast */}
       <div
-        className={`fixed bottom-28 left-4 right-4 z-50 transition-all duration-300 ${
-          toast
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-3 pointer-events-none"
-        }`}
+        className={`fixed bottom-28 left-4 right-4 z-50 transition-all duration-300 ${toast
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-3 pointer-events-none"
+          }`}
       >
         <div className="bg-fg text-surface rounded-2xl px-4 py-3 flex items-center justify-between shadow-xl max-w-sm mx-auto">
           <p className="text-sm font-medium truncate">

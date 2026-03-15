@@ -1,6 +1,10 @@
+import { useState } from "react";
 import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
+import { titleCase } from "~/utils/titleCase";
+import { useQuery } from "@tanstack/react-query";
+import { getPantryItems } from "~/services/pantry";
 
 type Props = {
   recipe: Recipe;
@@ -8,6 +12,23 @@ type Props = {
 };
 
 export default function RecipeDetail({ recipe, onBack }: Props) {
+  const [isStarred, setIsStarred] = useState(false);
+  const { data: pantryItems } = useQuery({
+    queryKey: ["pantry-items"],
+    queryFn: getPantryItems,
+  })
+
+  const ingredients = pantryItems?.map((item) => item.name.toLowerCase()) || [];
+  console.log(ingredients)
+  const reg = new RegExp(`${ingredients.join("|")}`, "i");
+
+  const checkAvailable = (ingredient: string) => {
+    console.log(ingredient)
+    const match = ingredient.match(reg);
+    console.log(match)
+    return match ? true : false;
+  }
+
   return (
     <div className="flex-1 overflow-y-auto pb-28">
       {/* Hero */}
@@ -19,18 +40,31 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
         >
           <i className="fa-solid fa-arrow-left text-sm" />
         </button>
+        <button
+          onClick={() => setIsStarred(!isStarred)}
+          className="absolute top-4 right-4 w-9 h-9 bg-black/30 hover:bg-black/50 rounded-full flex items-center justify-center text-white transition-colors"
+        >
+          <i className={`${isStarred ? "fa-solid text-yellow-400" : "fa-regular text-white"} fa-star text-sm`} />
+        </button>
       </div>
 
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-2xl font-extrabold text-fg leading-snug">
-          {recipe.title}
+          {titleCase(recipe.title)}
         </h1>
-        <p className="text-fg-muted text-sm mt-1">{recipe.subtitle}</p>
-        <div className="flex flex-wrap gap-2 mt-3">
-          {recipe.tags.map((tag) => (
-            <TagPill key={tag} label={tag} />
-          ))}
-        </div>
+        {recipe.nutrition && (
+          <>
+            <p className="text-fg text-sm mt-2">{recipe.nutrition.summary}</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.calories_kcal)} kcal/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.protein_g)}g protein/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.carbs_g)}g carbs/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fat_g)}g fat/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fiber_g)}g fiber/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.sugar_g)}g sugar/100g`} />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="h-px bg-border mx-5" />
@@ -41,7 +75,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
           {recipe.ingredients.map((ing, i) => (
             <li
               key={i}
-              className="text-fg-secondary text-sm flex items-start gap-2"
+              className={`text-sm flex items-start gap-2 ${checkAvailable(ing) ? "text-primary" : "text-fg"}`}
             >
               <span className="text-primary mt-0.5 shrink-0">•</span>
               {ing}
@@ -53,9 +87,9 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
       <div className="h-px bg-border mx-5" />
 
       <div className="px-5 py-4">
-        <h2 className="text-xl font-extrabold text-fg mb-3">Instruction</h2>
+        <h2 className="text-xl font-extrabold text-fg mb-3">Method</h2>
         <ol className="space-y-2.5">
-          {recipe.instructions.map((step, i) => (
+          {recipe.method.map((step, i) => (
             <li
               key={i}
               className="text-fg-secondary text-sm flex items-start gap-3"

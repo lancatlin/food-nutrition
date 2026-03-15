@@ -1,65 +1,85 @@
 import { useState, useEffect } from "react";
-import type { Recipe } from "~/components/recipe.types";
-import { recipes } from "~/components/recipe.data";
+import { useNavigate, useSearchParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import RecipeCard from "~/components/RecipeCard";
-import RecipeDetail from "~/components/RecipeDetail";
+import { generateRecipes } from "~/services/recipes";
 
-const usedIngredients = [
-  "Chicken Breast", "Avocado", "Eggs", "Tomato", "Bacon", "Spinach", "Onion",
-];
-
-type PageState = "generating" | "results" | "detail";
+type PageState = "generating" | "ready";
 
 export default function GenerateRecipe() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ingredientsStr = searchParams.get("ingredients") || "";
+  const usedIngredients = ingredientsStr ? ingredientsStr.split(",") : [];
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["generated-recipes", ingredientsStr],
+    queryFn: () => generateRecipes(usedIngredients),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: usedIngredients.length > 0,
+  });
+
+  const recipes = data?.recipes || [];
   const [pageState, setPageState] = useState<PageState>("generating");
-  const [selected, setSelected] = useState<Recipe | null>(null);
   const [visibleCount, setVisibleCount] = useState(0);
 
+  // Skip animation if we already have recipes (e.g. back navigation)
   useEffect(() => {
-    if (pageState !== "generating") return;
-    const t = setTimeout(() => setPageState("results"), 1800);
-    return () => clearTimeout(t);
-  }, [pageState]);
+    if (recipes.length > 0 && pageState === "generating") {
+      setPageState("ready");
+      setVisibleCount(recipes.length);
+    }
+  }, [recipes, pageState]);
 
+  // Initial generation delay (only if not already ready)
   useEffect(() => {
-    if (pageState !== "results" || visibleCount >= recipes.length) return;
-    const t = setTimeout(() => setVisibleCount(n => n + 1), 400);
+    if (pageState !== "generating" || isLoading) return;
+    const t = setTimeout(() => setPageState("ready"), 1500);
     return () => clearTimeout(t);
-  }, [pageState, visibleCount]);
+  }, [pageState, isLoading]);
 
-  if (pageState === "detail" && selected) {
-    return <RecipeDetail recipe={selected} onBack={() => setPageState("results")} />;
-  }
+  // Sequential reveal animation
+  useEffect(() => {
+    if (pageState !== "ready" || visibleCount >= recipes.length) return;
+    const t = setTimeout(() => setVisibleCount((n) => n + 1), 300);
+    return () => clearTimeout(t);
+  }, [pageState, visibleCount, recipes.length]);
 
   return (
     <div className="flex-1 flex flex-col pt-14 pb-28 overflow-y-auto">
       <h1 className="text-4xl font-extrabold text-fg px-5 mb-6 leading-tight">
-        Finding<br />Recipes...
+        {pageState === "generating" ? (
+          <>Finding<br />Recipes...</>
+        ) : (
+          <>Recipe<br />Suggestions</>
+        )}
       </h1>
 
       {pageState === "generating" && (
         <div className="flex flex-col items-center gap-5 px-5 mt-4">
           <div className="w-14 h-14 rounded-full border-4 border-primary-tint border-t-primary animate-spin" />
-          <p className="text-fg-muted text-sm">Extracting Food Items from Receipt</p>
-          <div className="w-full bg-background rounded-2xl px-5 py-4 mt-2">
+          <p className="text-fg-muted text-sm">AI is cooking up something special...</p>
+          <div className="w-full bg-surface rounded-2xl px-5 py-4 mt-2 border border-border">
             <p className="text-fg font-bold mb-3">Ingredients Included</p>
-            <ul className="space-y-2">
+            <ul className="flex flex-wrap gap-2">
               {usedIngredients.map(name => (
-                <li key={name} className="text-fg-secondary text-sm">{name}</li>
+                <li key={name} className="bg-primary-tint text-primary-dark text-xs font-semibold px-3 py-1 rounded-full border border-primary/10">
+                  {name}
+                </li>
               ))}
             </ul>
           </div>
         </div>
       )}
 
-      {pageState === "results" && (
+      {pageState === "ready" && (
         <div className="flex flex-col gap-4 px-4">
           {recipes.slice(0, visibleCount).map(recipe => (
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
               previewIngredients={usedIngredients.slice(0, 5)}
-              onClick={() => { setSelected(recipe); setPageState("detail"); }}
+              onClick={() => navigate(`/recipes/${recipe.id}`)}
             />
           ))}
           {visibleCount < recipes.length && (
@@ -72,3 +92,4 @@ export default function GenerateRecipe() {
     </div>
   );
 }
+
