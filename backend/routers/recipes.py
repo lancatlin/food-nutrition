@@ -129,6 +129,7 @@ def _save_recipe_to_db(
     db: Session,
     recipe_data: dict,
     nutrition_data: dict,
+    summary: str = "",
 ) -> Recipe:
     instructions = recipe_data.get("method", "")
     if isinstance(instructions, list):
@@ -148,7 +149,11 @@ def _save_recipe_to_db(
         diet_label=recipe_data.get("diet_label"),
         image_path=recipe_data.get("image_path"),
         recipe_instructions=instructions,
-        nutrition_json=json.dumps(full_nutrition),
+        nutrition_json=json.dumps({
+            "recipe_per_100g": nutrition_data.get("recipe_per_100g", {}),
+            "total_weight_g": nutrition_data.get("total_weight_g", 0),
+            "summary": summary,
+        }),
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -260,11 +265,7 @@ async def create_recipe(
             "summary":               summary,
         }
 
-        # Save to DB
-        saved_recipe = _save_recipe_to_db(db, recipe, full_nutrition_data)
-        
-        # Map to schema
-        final_recipes.append(_map_recipe_to_schema(saved_recipe))
+        _save_recipe_to_db(db, recipe, nutrition, summary)
 
     db.commit()
 
