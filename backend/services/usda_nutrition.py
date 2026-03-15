@@ -1,26 +1,3 @@
-"""
-USDA FoodData Central — Nutrition Lookup
-Outputs structured JSON nutrition data per ingredient and per recipe.
-
-Setup:
-    1. Get a free API key at: https://fdc.nal.usda.gov/api-key-signup/
-       (instant — just an email address required)
-    2. Set your key:
-           export USDA_API_KEY="your_key_here"
-       Or paste it into the API_KEY line below.
-
-Install:
-    pip install requests
-
-Usage (standalone):
-    python usda_nutrition.py
-
-Usage (integrated with recipe_generator.py):
-    from usda_nutrition import get_recipe_nutrition
-    result = get_recipe_nutrition(recipe)   # returns a dict
-    import json; print(json.dumps(result, indent=2))
-"""
-
 import json
 import os
 import re
@@ -31,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env.dev")
 
 # ── Credentials ────────────────────────────────────────────────────────────────
-API_KEY  = "DP1x8jbCGbJcajZ0ZM7Jg6wm2qwl5rWdz3lEZ4jR"
+API_KEY  = os.getenv("USDA_KEY")
 BASE_URL = "https://api.nal.usda.gov/fdc/v1"
 
 # ── Hardcoded nutrition overrides ──────────────────────────────────────────────

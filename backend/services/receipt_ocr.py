@@ -7,7 +7,7 @@ from PIL import Image
 from pydantic import BaseModel
 
 
-client = genai.Client(api_key="AIzaSyAr2nDF5DRgKNOYYD79_rK6GTH3T_-TKt0")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 MODEL = "models/gemini-2.5-flash-lite"
 
 
