@@ -13,11 +13,13 @@ DELETE `/pantry-items/{id}`
   Delete an item (mark it deletedAt = now)
   
 POST `/receipt`
-  Upload a image to process
+  Upload a image to process 
   Return list of items (parsed result)
   
-GET `/recipes`
-  Return recipes the user saved
+GET `/recipes?i=`
+  Return recipes matched selected ingredients
+  Inputs: i: list of ingredients
+  Outputs: list of recipes
   
 POST `/recipes`
   Input: ingredient list

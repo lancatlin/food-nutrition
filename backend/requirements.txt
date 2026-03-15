@@ -4,4 +4,5 @@ httpx
 requests
 sqlalchemy
 psycopg2-binary
+Pillow
 google-genai

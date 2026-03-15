@@ -15,10 +15,9 @@ class User(Base):
     name = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
-    saved_recipes = relationship("SavedRecipe", back_populates="user")
 
     pantry_items = relationship("PantryItem", back_populates="user")
-    recipes = relationship("Recipe", back_populates="user")
+    saved_recipes = relationship("SavedRecipe", back_populates="user")
 
 
 class Ingredient(Base):
@@ -37,7 +36,6 @@ class PantryItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     ingredient_id = Column(Integer, ForeignKey("ingredient.id"), nullable=False)
-    quantity_unit = Column(String, nullable=True)
     expiry_date = Column(Date, nullable=True)
     added_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
@@ -51,21 +49,16 @@ class Recipe(Base):
     __tablename__ = "recipe"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     diet_label = Column(String, nullable=True)
-    health_label = Column(String, nullable=True)
     recipe_name = Column(String, nullable=False)
-    image_url = Column(String, nullable=True)
-    content = Column(Text, nullable=True)
+    image_path = Column(String, nullable=True)
+    recipe_instructions = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
     nutrition_json = Column(Text, nullable=True)
-    total_weight_g = Column(Numeric, nullable=True)
-    cuisine_type = Column(String, nullable=True)
-    saved_by = relationship("SavedRecipe", back_populates="recipe")
 
-    user = relationship("User", back_populates="recipes")
     ingredients = relationship("RecipeIngredient", back_populates="recipe")
+    saved_by = relationship("SavedRecipe", back_populates="recipe")
 
 
 class RecipeIngredient(Base):
@@ -74,12 +67,10 @@ class RecipeIngredient(Base):
     id = Column(Integer, primary_key=True, index=True)
     recipe_id = Column(Integer, ForeignKey("recipe.id"), nullable=False)
     ingredient_id = Column(Integer, ForeignKey("ingredient.id"), nullable=False)
-    quantity_value = Column(Numeric, nullable=True)
-    quantity_unit = Column(String, nullable=True)
-    order_index = Column(Integer, nullable=True)
 
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient")
+
 
 class SavedRecipe(Base):
     __tablename__ = "saved_recipe"
@@ -89,11 +80,9 @@ class SavedRecipe(Base):
     recipe_id = Column(Integer, ForeignKey("recipe.id"), nullable=False)
     saved_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     user = relationship("User", back_populates="saved_recipes")
     recipe = relationship("Recipe", back_populates="saved_by")
 
-    # Prevents the same user saving the same recipe twice
     __table_args__ = (
         UniqueConstraint("user_id", "recipe_id", name="uq_saved_recipe_user_recipe"),
     )
