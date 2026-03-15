@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import type { Recipe } from "~/components/recipe.types";
-import { recipes } from "~/components/recipe.data";
+import { useNavigate, useSearchParams } from "react-router";
+import { sampleRecipe } from "~/types/recipe.data";
 import RecipeCard from "~/components/RecipeCard";
 import RecipeDetail from "~/components/RecipeDetail";
-
-const usedIngredients = [
-  "Chicken Breast", "Avocado", "Eggs", "Tomato", "Bacon", "Spinach", "Onion",
-];
+import type { Recipe } from "~/types";
 
 type PageState = "generating" | "results" | "detail";
 
 export default function GenerateRecipe() {
+  const recipes = sampleRecipe.recipes;
+  const [searchParams] = useSearchParams();
+  const ingredientsStr = searchParams.get("ingredients") || "";
+  const usedIngredients = ingredientsStr ? ingredientsStr.split(",") : [];
+
   const [pageState, setPageState] = useState<PageState>("generating");
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [visibleCount, setVisibleCount] = useState(0);
@@ -23,9 +25,9 @@ export default function GenerateRecipe() {
 
   useEffect(() => {
     if (pageState !== "results" || visibleCount >= recipes.length) return;
-    const t = setTimeout(() => setVisibleCount(n => n + 1), 400);
+    const t = setTimeout(() => setVisibleCount((n: number) => n + 1), 400);
     return () => clearTimeout(t);
-  }, [pageState, visibleCount]);
+  }, [pageState, visibleCount, recipes.length]);
 
   if (pageState === "detail" && selected) {
     return <RecipeDetail recipe={selected} onBack={() => setPageState("results")} />;
