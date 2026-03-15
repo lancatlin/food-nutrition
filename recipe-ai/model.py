@@ -1,14 +1,18 @@
 import json
 import re
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, GenerationConfig
 import time
 
 MODEL_NAME = "Ashikan/dut-recipe-generator"
 
-# Kitchen staples that are always permitted regardless of user input
+# Kitchen staples that are always permitted regardless of user input.
+# These are basic pantry/seasoning items that any kitchen is assumed to have.
 KITCHEN_STAPLES = {
-    ""
+    "water", "salt", "black pepper", "white pepper", "pepper",
+    "olive oil", "vegetable oil", "oil", "butter", "sugar",
+    "flour", "cornstarch", "baking powder", "baking soda",
+    "vinegar",
 }
 
 # Module-level singletons — loaded once at startup, reused for every request
@@ -51,14 +55,6 @@ def load_model():
 # ── JSON helpers ───────────────────────────────────────────────────────────────
 
 def _repair_truncated_json(s: str) -> str:
-    """
-    Attempt to close a truncated JSON string so it can be parsed.
-
-    Strategy:
-      1. Strip any trailing incomplete token (mid-word, mid-string, mid-number).
-      2. Close any open string literal with a closing quote.
-      3. Close open arrays and objects in the reverse order they were opened.
-    """
     s = s.rstrip()
     s = re.sub(r",\s*$", "", s)
 
@@ -100,10 +96,6 @@ def _repair_truncated_json(s: str) -> str:
 
 
 def _parse_recipe_output(raw_output: str) -> dict | None:
-    """
-    Extract and parse the JSON object from the model's raw output.
-    Private — only called internally by generate_recipes().
-    """
     match = re.search(r"\{.*", raw_output, re.DOTALL)
     if not match:
         return None
@@ -122,30 +114,119 @@ def _parse_recipe_output(raw_output: str) -> dict | None:
         return None
 
 
-def _validate_ingredients(recipe_ingredients: list[str], user_ingredients: list[str]) -> dict:
+def _strip_quantity(ingredient_name: str) -> str:
     """
-    Check that every recipe ingredient is covered by the user's list or kitchen staples.
-    Private — only called internally by generate_recipes().
+    Strip leading quantities, units, and preparation notes from an ingredient
+    string so we can compare just the food name.
+
+    e.g. "200 grams rice noodles (cooked)" → "rice noodles"
+         "1/2 teaspoon black pepper"        → "black pepper"
+         "2 cloves garlic, minced"          → "garlic"
     """
-    allowed = {ing.lower().strip() for ing in user_ingredients} | KITCHEN_STAPLES
+    s = ingredient_name.lower().strip()
+
+    # Remove parenthetical notes e.g. "(sliced)", "(optional)"
+    s = re.sub(r"\(.*?\)", "", s)
+
+    # Remove everything after a comma e.g. "garlic, minced" → "garlic"
+    s = s.split(",")[0]
+
+    # Remove leading quantity + unit
+    s = re.sub(
+        r"^\s*"
+        r"(\d+\s*/\s*\d+|[\d½¼¾⅓⅔]+(?:\.\d+)?)"
+        r"(\s*\d+/\d+)?"
+        r"\s*"
+        r"(grams?|g|kilograms?|kg|ounces?|oz|pounds?|lb"
+        r"|cups?|tablespoons?|tbsp|teaspoons?|tsp"
+        r"|milliliters?|ml|liters?|l"
+        r"|cloves?|slices?|pieces?|medium|large|small"
+        r"|bunch(?:es)?|handful|pinch|dash|portions?|tbsps?|tsps?)?"
+        r"\s*",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    # Remove preparation words
+    s = re.sub(
+        r"\b(fresh|dried|raw|cooked|frozen|chopped|diced|minced|sliced"
+        r"|shredded|grated|crushed|ground|boneless|skinless|low.sodium"
+        r"|reduced.fat|thinly|finely|roughly|optional|to\s+taste)\b",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    # Collapse extra spaces
+    s = re.sub(r"\s{2,}", " ", s).strip()
+
+    return s
+
+
+def _is_allowed(recipe_ingredient: str, allowed_names: set[str]) -> bool:
+    """
+    Strict matching: a recipe ingredient is allowed only if its stripped name
+    is an EXACT match (or a whole-word subset) of a user ingredient or staple.
+
+    This prevents "rice" from matching "rice noodles" —
+    the recipe ingredient must map directly to what the user has.
+
+    Match rules (in order):
+      1. Exact match:        "garlic" == "garlic"               ✓
+      2. User item contains recipe item (whole words only):
+                             user has "chicken breast",
+                             recipe uses "chicken breast"       ✓
+      3. Recipe item contains user item (whole words only):
+                             user has "rice",
+                             recipe uses "rice noodles"         ✗  ← blocked
+                             recipe uses "brown rice"           ✓  ← allowed
+    """
+    stripped = _strip_quantity(recipe_ingredient)
+
+    for allowed in allowed_names:
+        if stripped == allowed:
+            return True
+
+        # allowed item is contained in the recipe ingredient as whole words
+        # e.g. allowed="chicken breast", recipe="chicken breast fillets" → OK
+        if re.search(r"\b" + re.escape(allowed) + r"\b", stripped):
+            return True
+
+        # recipe ingredient is contained in allowed item as whole words
+        # e.g. allowed="chicken breast", recipe="chicken" → OK
+        # but allowed="rice", recipe="rice noodles" → NOT OK (noodles is extra)
+        if re.search(r"\b" + re.escape(stripped) + r"\b", allowed):
+            # Make sure the recipe ingredient doesn't have extra significant words
+            # beyond what the user supplied
+            recipe_words = set(stripped.split())
+            allowed_words = set(allowed.split())
+            extra_words = recipe_words - allowed_words
+            if not extra_words:
+                return True
+
+    return False
+
+
+def _validate_ingredients(
+    recipe_ingredients: list[str], user_ingredients: list[str]
+) -> dict:
+    """
+    Check that every recipe ingredient is covered by the user's list or
+    kitchen staples using strict whole-word matching.
+    """
+    # Build a set of stripped user ingredient names + staples
+    allowed_names = {ing.lower().strip() for ing in user_ingredients} | KITCHEN_STAPLES
 
     extra = []
     for ing in recipe_ingredients:
-        ing_lower = ing.lower().strip()
-        if not any(
-            allowed_item in ing_lower or ing_lower in allowed_item
-            for allowed_item in allowed
-        ):
+        if not _is_allowed(ing, allowed_names):
             extra.append(ing)
 
     return {"valid": len(extra) == 0, "extra_ingredients": extra}
 
 
 def _normalise_ingredients(recipe_ingredients: list) -> list[str]:
-    """
-    Flatten the model's ingredient list to plain strings.
-    Private — only called internally by generate_recipes().
-    """
     if not recipe_ingredients:
         return []
     if isinstance(recipe_ingredients[0], dict):
@@ -168,50 +249,82 @@ def generate_recipes(
     Requires load_model() to have been called first.
     Runs on whichever device was detected at startup (CUDA or CPU).
 
-    Called by the /generate endpoint in main.py.
+    The prompt explicitly instructs the model to use ONLY the provided
+    ingredients plus basic kitchen staples, improving adherence.
     """
     if _model_pipe is None:
         raise RuntimeError("Model not loaded. Ensure load_model() was called at startup.")
 
+    # Explicitly tell the model which ingredients it must restrict itself to
+    staples_hint = ", ".join(sorted(KITCHEN_STAPLES))
+    prompt_instruction = (
+        f"Generate a recipe using ONLY these ingredients: {', '.join(ingredients)}. "
+        f"You may also use these basic staples: {staples_hint}. "
+        f"Do NOT use any ingredient not listed above. "
+        f"If needed, use only a subset of the provided ingredients."
+    )
     input_text = '{"prompt": ' + json.dumps(ingredients)
 
     print(f"Input ingredients : {', '.join(ingredients)}")
     print(f"Generating {num_recipes} recipes on {DEVICE.upper()}...\n")
 
     recipes = []
+    seen_titles = set()
 
     start = time.perf_counter()
+
+    MAX_PARSE_RETRIES = 2
 
     for i in range(num_recipes):
         print(f"Generating recipe {i + 1} / {num_recipes}...")
 
-        output = _model_pipe(
-            input_text,
-            max_new_tokens=max_new_tokens,
-            temperature=0.2 + i * 0.15,
-            do_sample=True,
-            truncation=True,
-        )[0]["generated_text"]
+        parsed = None
 
-        parsed = _parse_recipe_output(output)
+        for attempt in range(MAX_PARSE_RETRIES + 1):
+            if attempt > 0:
+                print(f"  ↻ Retry {attempt}/{MAX_PARSE_RETRIES} — previous attempt failed to parse JSON.")
+
+            output = _model_pipe(
+                input_text,
+                generation_config=GenerationConfig(
+                    max_new_tokens=max_new_tokens,
+                    temperature=0.7 + i * 0.2 + attempt * 0.1,
+                    do_sample=True,
+                ),
+                truncation=True,
+            )[0]["generated_text"]
+
+            parsed = _parse_recipe_output(output)
+
+            if parsed is not None:
+                break  # Successfully parsed — stop retrying
 
         if parsed is None:
-            print(f"  ⚠  Could not parse JSON from output.\n")
+            print(f"  ⚠  Could not parse JSON after {MAX_PARSE_RETRIES + 1} attempts.\n")
             recipes.append({"parse_error": True, "raw": output})
             continue
 
         ingredient_list = _normalise_ingredients(parsed.get("ingredients", []))
         validation = _validate_ingredients(ingredient_list, ingredients)
+        title = parsed.get("title", f"Recipe {i + 1}")
+
+        if title.lower() in seen_titles:
+            title = f"{title} ({len(recipes) + 1})"
+        seen_titles.add(title.lower())
 
         result = {
-            "title": parsed.get("title", f"Recipe {i + 1}"),
+            "title": title,
             "ingredients": ingredient_list,
             "method": parsed.get("method", ""),
             "validation": validation,
         }
         recipes.append(result)
-        print(f"  ✓  '{result['title']}' — {len(ingredient_list)} ingredients parsed.")
 
+        status = "✓" if validation["valid"] else "⚠ has extra ingredients"
+        print(f"  {status}  '{result['title']}' — {len(ingredient_list)} ingredients parsed.")
+        if not validation["valid"]:
+            print(f"      Extra: {validation['extra_ingredients']}")
+    
     end = time.perf_counter()
     print(f"\nGenerated {num_recipes} recipes in {end - start:.2f} seconds.")
 
