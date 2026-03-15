@@ -1,6 +1,7 @@
 import asyncio
 import json
 from datetime import datetime, timezone
+
 from database import get_db
 from deps import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -8,6 +9,7 @@ from models import Ingredient, Recipe, RecipeIngredient, SavedRecipe, User
 from pydantic import BaseModel, Field
 from recipe_client import get_recipes as fetch_recipes
 from services.usda_nutrition import get_all_recipes_nutrition
+from services.nutrition_evaluation import get_nutrition_explanation
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -15,10 +17,16 @@ router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 # Schemas
 
-class RecipeRequest(BaseModel):
+class NutritionRequest(BaseModel):
     ingredients: list[str] = Field(
         ..., examples=[["mushrooms", "cabbage", "soy sauce"]]
     )
+    num_recipes: int = Field(default=1, ge=1, le=10)
+
+
+class NutritionResponse(BaseModel):
+    ingredients_used: list[str]
+    recipes: list[dict]
 
 
 class RecipeIngredientOut(BaseModel):
@@ -54,12 +62,6 @@ class RecipeDetailOut(BaseModel):
         from_attributes = True
 
 
-class GenerateRecipeResponse(BaseModel):
-    ingredients_used: list[str]
-    generated_recipe: RecipeOut
-    nutrition: dict
-
-
 class SaveRecipeResponse(BaseModel):
     message: str
     recipe_id: int
@@ -68,10 +70,6 @@ class SaveRecipeResponse(BaseModel):
 # Helpers
 
 def _get_ingredient(db: Session, name: str) -> Ingredient | None:
-    """
-    Look up an ingredient by name only — never create one.
-    Returns None if the ingredient doesn't exist in the DB.
-    """
     clean = name.strip().lower()
     return db.query(Ingredient).filter(Ingredient.name == clean).first()
 
@@ -81,10 +79,6 @@ def _save_recipe_to_db(
     recipe_data: dict,
     nutrition_data: dict,
 ) -> Recipe:
-    """
-    Persist a single generated recipe to the database.
-    Only links ingredients that already exist in the ingredient table.
-    """
     instructions = recipe_data.get("method", "")
     if isinstance(instructions, list):
         instructions = "\n".join(instructions)
@@ -116,7 +110,7 @@ def _save_recipe_to_db(
 # GET /recipes
 
 @router.get("", response_model=list[RecipeOut])
-def get_recipes(
+def get_saved_recipes(
     i: list[str] = Query(None, description="List of ingredients to match"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -154,55 +148,69 @@ def get_recipes(
         )
 
 
-# POST /recipes
+# POST /recipes 
 
-@router.post("", response_model=GenerateRecipeResponse, status_code=201)
+@router.post("", response_model=NutritionResponse, status_code=201)
 async def create_recipe(
-    request: RecipeRequest,
+    request: NutritionRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Step 1 — Send ingredient list to AI microservice, get 1 recipe back.
-    Step 2 — Fetch USDA nutrition for that recipe.
-    Step 3 — Save recipe to DB, linking only existing ingredients.
-    Step 4 — Return recipe with its DB ID and nutrition data.
+    Step 1 — AI microservice generates recipes from ingredients.
+    Step 2 — USDA API fetches nutritional data for each valid recipe.
+    Step 3 — Gemini generates a health summary for each recipe.
+    Step 4 — Each recipe, its nutrition, and summary are merged into one object.
+    Step 5 — Save each valid recipe to DB.
+    Step 6 — Return combined result to frontend.
     """
-    # Step 1 — generate 1 recipe via AI
-    generated = await fetch_recipes(
+    # Step 1 — generate recipes via AI
+    recipes = await fetch_recipes(
         ingredients=request.ingredients,
-        num_recipes=1,
+        num_recipes=request.num_recipes,
     )
 
-    if not generated or generated[0].get("parse_error"):
-        raise HTTPException(
-            status_code=502,
-            detail="AI service failed to generate a valid recipe.",
-        )
+    # Step 2 — fetch USDA nutrition (blocking, run in thread pool)
+    nutrition_list = await asyncio.to_thread(get_all_recipes_nutrition, recipes)
+    nutrition_by_title = {n["title"]: n for n in nutrition_list}
 
-    recipe_data = generated[0]
+    # Step 3, 4, 5 — summary, merge, save
+    merged_recipes = []
 
-    # Step 2 — fetch USDA nutrition
-    nutrition_list = await asyncio.to_thread(get_all_recipes_nutrition, [recipe_data])
-    nutrition_data = nutrition_list[0] if nutrition_list else {}
+    for recipe in recipes:
+        if recipe.get("parse_error"):
+            merged_recipes.append(recipe)
+            continue
 
-    # Step 3 — save to DB
-    saved_recipe = _save_recipe_to_db(db, recipe_data, nutrition_data)
+        title = recipe["title"]
+        nutrition = nutrition_by_title.get(title, {})
+
+        # Generate Gemini health summary (blocking, run in thread pool)
+        summary = await asyncio.to_thread(get_nutrition_explanation, nutrition)
+
+        # Merge recipe + nutrition + summary into one object for the frontend
+        merged_recipes.append({
+            "title":       title,
+            "ingredients": recipe.get("ingredients", []),
+            "method":      recipe.get("method", []),
+            "validation":  recipe.get("validation", {}),
+            "nutrition": {
+                "total_weight_g":        nutrition.get("total_weight_g", 0),
+                "recipe_per_100g":       nutrition.get("recipe_per_100g", {}),
+                "ingredients_not_found": nutrition.get("ingredients_not_found", []),
+                "ingredients":           nutrition.get("ingredients", []),
+                "summary":               summary,
+            },
+        })
+
+        _save_recipe_to_db(db, recipe, nutrition)
+
     db.commit()
-    db.refresh(saved_recipe)
 
-    # Step 4 — return result
-    return GenerateRecipeResponse(
+    # Step 6 — return combined result
+    return NutritionResponse(
         ingredients_used=request.ingredients,
-        generated_recipe=RecipeOut(
-            id=saved_recipe.id,
-            recipe_name=saved_recipe.recipe_name,
-            diet_label=saved_recipe.diet_label,
-            image_path=saved_recipe.image_path,
-            recipe_instructions=saved_recipe.recipe_instructions,
-            nutrition_json=saved_recipe.nutrition_json,
-        ),
-        nutrition=nutrition_data,
+        recipes=merged_recipes,
     )
 
 
