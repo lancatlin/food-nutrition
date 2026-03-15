@@ -6,4 +6,5 @@ export default [
   route("pantry/add", "routes/addItems.tsx"),
   route("recipes", "routes/recipeList.tsx"),
   route("recipes/add", "routes/generateReceipe.tsx"),
+  route("recipes/:id", "routes/recipeDetail.tsx"),
 ] satisfies RouteConfig;
