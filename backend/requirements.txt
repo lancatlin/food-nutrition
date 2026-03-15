@@ -4,3 +4,4 @@ httpx
 requests
 sqlalchemy
 psycopg2-binary
+google-genai
