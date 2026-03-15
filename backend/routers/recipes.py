@@ -150,11 +150,7 @@ def _save_recipe_to_db(
         diet_label=recipe_data.get("diet_label"),
         image_path=recipe_data.get("image_path"),
         recipe_instructions=instructions,
-        nutrition_json=json.dumps({
-            "recipe_per_100g": nutrition_data.get("recipe_per_100g", {}),
-            "total_weight_g": nutrition_data.get("total_weight_g", 0),
-            "summary": summary,
-        }),
+        nutrition_json=json.dumps(full_nutrition),
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -265,15 +261,17 @@ async def create_recipe(
             "summary":               summary,
         }
 
+
+        r = _save_recipe_to_db(db, recipe, nutrition, summary)
+
         merged_recipes.append({
+            "id": r.id,
             "title":       title,
             "ingredients": recipe.get("ingredients", []),
             "method":      recipe.get("method", []),
             "validation":  recipe.get("validation", {}),
             "nutrition": full_nutrition_data,
         })
-
-        _save_recipe_to_db(db, recipe, nutrition, summary)
 
     db.commit()
 
