@@ -17,3 +17,8 @@ export async function generateRecipes(
   });
   return res.data;
 }
+
+export async function getSavedRecipes(): Promise<Recipe[]> {
+  const res = await api.get("/recipes");
+  return res.data;
+}

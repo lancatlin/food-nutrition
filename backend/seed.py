@@ -47,7 +47,9 @@ RECIPES = [
                 "fiber_g": 2.59,
                 "sugar_g": 0.18,
             },
-            "summary": "What a wonderful healthy choice! This steamed cabbage and mushrooms dish is incredibly low in calories, making it ideal for weight management. Its impressive fiber content helps keep you feeling full and supports healthy digestion."
+            "summary": "What a wonderful healthy choice! This steamed cabbage and mushrooms dish is incredibly low in calories, making it ideal for weight management. Its impressive fiber content helps keep you feeling full and supports healthy digestion.",
+            "ingredients_not_found": [],
+            "ingredients": [],
         }
     },
     {
@@ -81,7 +83,9 @@ RECIPES = [
                 "fiber_g": 6,
                 "sugar_g": 2,
             },
-            "summary": "High-fiber vegan lentil soup that is filling and nutritious."
+            "summary": "High-fiber vegan lentil soup that is filling and nutritious.",
+            "ingredients_not_found": [],
+            "ingredients": [],
         }
     },
 ]
