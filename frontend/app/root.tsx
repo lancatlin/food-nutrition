@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Route } from "./+types/root";
 import "./app.css";
 import NavBar from "./components/navbar";
+import { ToastContainer } from "react-toastify";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <ToastContainer />
     </QueryClientProvider>
   );
 }

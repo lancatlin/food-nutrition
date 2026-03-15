@@ -1,4 +1,11 @@
+from datetime import date, datetime, timezone
+from typing import Optional
+
+from database import get_db
+from deps import get_current_user
 from fastapi import APIRouter, Depends, HTTPException
+from models import Ingredient, PantryItem, User
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime, date, timezone
@@ -11,6 +18,7 @@ router = APIRouter(prefix="/pantry", tags=["pantry"])
 
 
 # Schemas
+
 
 class PantryItemCreate(BaseModel):
     ingredient_name: str
@@ -31,13 +39,21 @@ class PantryItemResponse(BaseModel):
         from_attributes = True
 
 
-# GET /pantry-items 
+# GET /pantry-items
+
 
 @router.get("/pantry-items", response_model=list[PantryItemResponse])
-def get_pantry_items(db: Session = Depends(get_db)):
+def get_pantry_items(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     items = (
         db.query(PantryItem)
-        .filter(PantryItem.deleted_at.is_(None))
+        .filter(
+            PantryItem.user_id == current_user.id,
+            PantryItem.deleted_at.is_(None),
+        )
+        .order_by(PantryItem.expiry_date.asc(), PantryItem.added_at.asc())
         .all()
     )
     return [
@@ -53,8 +69,13 @@ def get_pantry_items(db: Session = Depends(get_db)):
 
 # POST /pantry-items
 
+
 @router.post("/pantry-items", response_model=list[PantryItemResponse], status_code=201)
-def create_pantry_items(items: list[PantryItemCreate], db: Session = Depends(get_db)):
+def create_pantry_items(
+    items: list[PantryItemCreate],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     created = []
 
     for item_data in items:
@@ -72,6 +93,7 @@ def create_pantry_items(items: list[PantryItemCreate], db: Session = Depends(get
 
         pantry_item = PantryItem(
             ingredient_id=ingredient.id,
+            user_id=current_user.id,
             expiry_date=item_data.expiry_date,
             added_at=datetime.now(timezone.utc),
         )
@@ -93,11 +115,21 @@ def create_pantry_items(items: list[PantryItemCreate], db: Session = Depends(get
 
 # PUT /pantry-items/{id}
 
+
 @router.put("/pantry-items/{item_id}", response_model=PantryItemResponse)
-def update_pantry_item(item_id: int, updates: PantryItemUpdate, db: Session = Depends(get_db)):
+def update_pantry_item(
+    item_id: int,
+    updates: PantryItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     item = (
         db.query(PantryItem)
-        .filter(PantryItem.id == item_id, PantryItem.deleted_at.is_(None))
+        .filter(
+            PantryItem.id == item_id,
+            PantryItem.user_id == current_user.id,
+            PantryItem.deleted_at.is_(None),
+        )
         .first()
     )
     if not item:
@@ -120,8 +152,13 @@ def update_pantry_item(item_id: int, updates: PantryItemUpdate, db: Session = De
 
 # DELETE /pantry-items/{id}
 
+
 @router.delete("/pantry-items/{item_id}", status_code=204)
-def delete_pantry_item(item_id: int, db: Session = Depends(get_db)):
+def delete_pantry_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     item = (
         db.query(PantryItem)
         .filter(PantryItem.id == item_id, PantryItem.deleted_at.is_(None))
