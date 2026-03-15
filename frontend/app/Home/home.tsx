@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router";
 import PantryItemList from "~/components/PantryItemList";
 import { getPantryItems } from "~/services/pantry";
+import ScanReceiptButton from "~/components/ScanReceiptButton";
 export default function Home() {
   const query = useQuery({
     queryKey: ["pantry-items"],
@@ -45,13 +46,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <NavLink
-              to="/pantry/add"
-              className="bg-white/20 hover:bg-white/30 transition-colors rounded-xl px-3 py-1.5 text-white text-xs font-medium flex items-center gap-1.5"
-            >
-              <i className="fa-solid fa-camera text-xs" />
-              Scan Receipt
-            </NavLink>
+            <ScanReceiptButton variant="ghost" />
           </div>
 
           {/* Progress Bar */}
