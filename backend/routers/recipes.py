@@ -142,7 +142,7 @@ def _save_recipe_to_db(
         "recipe_per_100g": nutrition_data.get("recipe_per_100g", {}),
         "ingredients_not_found": nutrition_data.get("ingredients_not_found", []),
         "ingredients": nutrition_data.get("ingredients", []),
-        "summary": nutrition_data.get("summary", "")
+        "summary": summary
     }
 
     recipe = Recipe(
