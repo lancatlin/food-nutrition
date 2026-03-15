@@ -6,6 +6,7 @@ import type { ProductSummary } from "~/types";
 import { addPantryItems } from "~/services/pantry";
 import { toast } from "react-toastify";
 import PantryItemList from "~/components/PantryItemList";
+import { useNavigate } from "react-router";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ function toFoodItems(products: ProductSummary[]): FoodItem[] {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AddItems() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<FoodItem[]>([]);
   const selectedIdsRef = useRef<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +43,7 @@ export default function AddItems() {
   const mutationAddPantry = useMutation({
     mutationFn: addPantryItems,
     onError: (err) => toast.error(err.message),
+    onSuccess: () => navigate("/"),
   });
 
   const handleFile = (file: File | undefined) => {
