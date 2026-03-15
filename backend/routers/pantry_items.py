@@ -7,6 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from models import Ingredient, PantryItem, User
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from datetime import datetime, date, timezone
+from typing import Optional
+from database import get_db
+from models import PantryItem, Ingredient
+import re
 
 router = APIRouter(prefix="/pantry", tags=["pantry"])
 
@@ -73,16 +79,17 @@ def create_pantry_items(
     created = []
 
     for item_data in items:
-        # Get or create the ingredient
+        clean_name = re.sub(r"\s+", " ", item_data.ingredient_name.strip().lower())
+
         ingredient = (
             db.query(Ingredient)
-            .filter(Ingredient.name == item_data.ingredient_name)
+            .filter(Ingredient.name == clean_name)
             .first()
         )
         if not ingredient:
-            ingredient = Ingredient(name=item_data.ingredient_name)
+            ingredient = Ingredient(name=clean_name)
             db.add(ingredient)
-            db.flush()  # get the ingredient.id without committing yet
+            db.flush()
 
         pantry_item = PantryItem(
             ingredient_id=ingredient.id,
