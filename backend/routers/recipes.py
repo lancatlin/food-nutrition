@@ -9,6 +9,7 @@ from models import Ingredient, Recipe, RecipeIngredient, SavedRecipe, User
 from pydantic import BaseModel, Field
 from recipe_client import get_recipes as fetch_recipes
 from services.usda_nutrition import get_all_recipes_nutrition
+from services.nutrition_evaluation import get_nutrition_explanation
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -67,7 +68,7 @@ class RecipeSchema(BaseModel):
 
 class NutritionResponse(BaseModel):
     ingredients_used: list[str]
-    recipes: list[RecipeSchema]
+    recipes: list[dict]
 
 
 class RecipeIngredientOut(BaseModel):
@@ -241,12 +242,11 @@ async def create_recipe(
     nutrition_by_title = {n["title"]: n for n in nutrition_list}
 
     # Step 3, 4, 5 — summary, merge, save
-    final_recipes = []
+    merged_recipes = []
 
     for recipe in recipes:
         if recipe.get("parse_error"):
-            # We don't have a good way to match the schema for errors yet
-            # but let's at least not crash
+            merged_recipes.append(recipe)
             continue
 
         title = recipe["title"]
@@ -254,7 +254,7 @@ async def create_recipe(
 
         # Generate Gemini health summary (blocking, run in thread pool)
         # summary = await asyncio.to_thread(get_nutrition_explanation, nutrition)
-        summary = "" # Placeholder for now as the import was removed by user
+        summary = await asyncio.to_thread(get_nutrition_explanation, nutrition) # Placeholder for now as the import was removed by user
 
         # Full nutrition object for DB and frontend
         full_nutrition_data = {
@@ -265,6 +265,14 @@ async def create_recipe(
             "summary":               summary,
         }
 
+        merged_recipes.append({
+            "title":       title,
+            "ingredients": recipe.get("ingredients", []),
+            "method":      recipe.get("method", []),
+            "validation":  recipe.get("validation", {}),
+            "nutrition": full_nutrition_data,
+        })
+
         _save_recipe_to_db(db, recipe, nutrition, summary)
 
     db.commit()
@@ -272,7 +280,7 @@ async def create_recipe(
     # Step 6 — return combined result
     return NutritionResponse(
         ingredients_used=request.ingredients,
-        recipes=final_recipes,
+        recipes=merged_recipes,
     )
 
 

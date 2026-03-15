@@ -31,7 +31,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env.dev")
 
 # ── Credentials ────────────────────────────────────────────────────────────────
-API_KEY  = os.getenv("USDA_KEY")
+API_KEY  = "DP1x8jbCGbJcajZ0ZM7Jg6wm2qwl5rWdz3lEZ4jR"
 BASE_URL = "https://api.nal.usda.gov/fdc/v1"
 
 # ── Hardcoded nutrition overrides ──────────────────────────────────────────────
