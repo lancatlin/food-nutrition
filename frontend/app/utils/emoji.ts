@@ -145,7 +145,7 @@ export const FOOD_EMOJI_RULES: FoodEmojiRule[] = [
     emoji: "🥬",
     label: "Leafy Green",
     pattern:
-      /\b(lettuce|kale|spinach|chard|arugula|rocket|bok\s*choy|pak\s*choi|collard|watercress|endive|radicchio|swiss\s*chard|leafy\s*green|celery)\b/i,
+      /\b(lettuce|kale|spinach|chard|arugula|rocket|bok\s*choy|pak\s*choi|collard|watercress|endive|radicchio|swiss\s*chard|leafy\s*green|celery|cabbage)\b/i,
   },
 
   { emoji: "🥦", label: "Broccoli", pattern: /\b(broccoli|broccolini)\b/i },
