@@ -60,51 +60,65 @@ export default function AddItems() {
     );
 
   // ── Upload state ────────────────────────────────────────────────────────────
-
   if (mutationUpload.status === "idle" || mutationUpload.status === "error") {
     return (
       <div className="flex-1 flex flex-col px-6 pt-14 pb-28">
-        <h1 className="text-4xl font-extrabold text-fg leading-tight mb-8">
+        <h1 className="text-4xl font-extrabold text-fg leading-tight mb-3">
           Upload a<br />
           Receipt
         </h1>
+        <p className="text-fg-muted text-sm mb-10 max-w-[240px]">
+          Snap a photo of your receipt to automatically add items to your pantry.
+        </p>
 
-        <div className="bg-background rounded-3xl p-8 flex flex-col items-center gap-6">
-          <div className="w-16 h-16 rounded-2xl bg-surface flex items-center justify-center shadow-sm">
-            <i className="fa-regular fa-file-image text-3xl text-fg-muted" />
-          </div>
-          <p className="text-fg text-xl font-semibold text-center leading-snug">
-            Select a File or
-            <br />
-            Open Camera
-          </p>
-          <div className="flex gap-8">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="text-primary font-semibold text-sm hover:text-primary-dark transition-colors"
-            >
-              Select File
-            </button>
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              className="text-primary font-semibold text-sm hover:text-primary-dark transition-colors"
-            >
-              Open Camera
-            </button>
-          </div>
+        <div className="flex flex-col gap-5">
+          {/* Camera Card */}
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            className="group relative bg-gradient-to-br from-primary to-primary-dark rounded-[32px] p-6 text-left shadow-xl shadow-primary-tint transition-all active:scale-[0.98] overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 -mr-4 -mt-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+            <div className="relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4 backdrop-blur-sm border border-white/30">
+                <i className="fa-solid fa-camera text-2xl text-white" />
+              </div>
+              <h2 className="text-white text-xl font-bold mb-1">Take Photo</h2>
+              <p className="text-white/70 text-sm">Directly from your camera</p>
+            </div>
+          </button>
 
-          {mutationUpload.status === "error" && (
-            <p className="text-red-500 text-sm text-center">
-              Upload failed. Please try again.
-            </p>
-          )}
+          {/* Gallery Card */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="group relative bg-surface border border-border rounded-[32px] p-6 text-left transition-all active:scale-[0.98] overflow-hidden"
+          >
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-primary-tint flex items-center justify-center mb-4 group-hover:bg-primary-light transition-colors">
+                  <i className="fa-regular fa-image text-2xl text-primary" />
+                </div>
+                <h2 className="text-fg text-xl font-bold mb-1">Choose File</h2>
+                <p className="text-fg-muted text-sm">Pick from storage or gallery</p>
+              </div>
+              <i className="fa-solid fa-chevron-right text-border-strong group-hover:translate-x-1 transition-transform" />
+            </div>
+          </button>
         </div>
 
-        {/* Hidden file inputs */}
+        {mutationUpload.status === "error" && (
+          <div className="mt-8 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3">
+            <i className="fa-solid fa-circle-exclamation text-red-500" />
+            <p className="text-red-600 text-sm font-medium">
+              Scanning failed. Please try again.
+            </p>
+          </div>
+        )}
+
+        {/* Hidden inputs */}
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*"
           className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
@@ -121,15 +135,21 @@ export default function AddItems() {
   }
 
   // ── Processing state ────────────────────────────────────────────────────────
-
   if (mutationUpload.status === "pending") {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 pb-28">
-        <h1 className="text-4xl font-extrabold text-fg">Processing...</h1>
-        <div className="w-14 h-14 rounded-full border-4 border-primary-tint border-t-primary animate-spin" />
-        <p className="text-fg-muted text-sm">
-          Extracting Food Items from Receipt
-        </p>
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 pb-28">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full border-4 border-primary-tint border-t-primary animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <i className="fa-solid fa-wand-magic-sparkles text-2xl text-primary animate-pulse" />
+          </div>
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold text-fg mb-2">Analyzing Receipt</h1>
+          <p className="text-fg-muted text-sm max-w-[200px] mx-auto">
+            Our AI is identifying ingredients and categories...
+          </p>
+        </div>
       </div>
     );
   }
