@@ -29,6 +29,10 @@ export default function RecipeCard({
           <div className="flex flex-wrap gap-2">
             <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.calories_kcal)} kcal/100g`} filled />
             <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.protein_g)}g protein`} filled />
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.carbs_g)}g carbs/100g`} filled />
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fat_g)}g fat/100g`} filled />
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fiber_g)}g fiber/100g`} filled />
+            <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.sugar_g)}g sugar/100g`} filled />
           </div>
         )}
       </div>

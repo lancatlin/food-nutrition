@@ -2,6 +2,8 @@ import type { Recipe } from "~/types";
 import RecipeHero from "./RecipeHero";
 import TagPill from "./TagPill";
 import { titleCase } from "~/utils/titleCase";
+import { useQuery } from "@tanstack/react-query";
+import { getPantryItems } from "~/services/pantry";
 
 type Props = {
   recipe: Recipe;
@@ -9,6 +11,22 @@ type Props = {
 };
 
 export default function RecipeDetail({ recipe, onBack }: Props) {
+  const { data: pantryItems } = useQuery({
+    queryKey: ["pantry-items"],
+    queryFn: getPantryItems,
+  })
+
+  const ingredients = pantryItems?.map((item) => item.name.toLowerCase()) || [];
+  console.log(ingredients)
+  const reg = new RegExp(`${ingredients.join("|")}`, "i");
+
+  const checkAvailable = (ingredient: string) => {
+    console.log(ingredient)
+    const match = ingredient.match(reg);
+    console.log(match)
+    return match ? true : false;
+  }
+
   return (
     <div className="flex-1 overflow-y-auto pb-28">
       {/* Hero */}
@@ -33,6 +51,9 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
               <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.calories_kcal)} kcal/100g`} />
               <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.protein_g)}g protein/100g`} />
               <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.carbs_g)}g carbs/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fat_g)}g fat/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.fiber_g)}g fiber/100g`} />
+              <TagPill label={`${Math.round(recipe.nutrition.recipe_per_100g.sugar_g)}g sugar/100g`} />
             </div>
           </>
         )}
@@ -46,7 +67,7 @@ export default function RecipeDetail({ recipe, onBack }: Props) {
           {recipe.ingredients.map((ing, i) => (
             <li
               key={i}
-              className="text-fg-secondary text-sm flex items-start gap-2"
+              className={`text-sm flex items-start gap-2 ${checkAvailable(ing) ? "text-primary" : "text-fg"}`}
             >
               <span className="text-primary mt-0.5 shrink-0">•</span>
               {ing}
