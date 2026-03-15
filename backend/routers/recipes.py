@@ -9,7 +9,6 @@ from models import Ingredient, Recipe, RecipeIngredient, SavedRecipe, User
 from pydantic import BaseModel, Field
 from recipe_client import get_recipes as fetch_recipes
 from services.usda_nutrition import get_all_recipes_nutrition
-from services.nutrition_evaluation import get_nutrition_explanation
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])

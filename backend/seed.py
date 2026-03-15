@@ -1,6 +1,6 @@
 """
 Seed the database with sample data for development.
-Run from the backend/ directory: python seed.py
+Run from the backend/ directory: ./ .venv/bin/python seed.py
 """
 
 import json
@@ -17,107 +17,88 @@ USERS = [
     {"email": "bob@example.com", "name": "Bob"},
 ]
 
-# Matches the shape produced by generate_recipes() in recipe-ai/model.py:
-#   { title, ingredients: list[str], method: str, validation: {valid, extra_ingredients} }
+# Recipes based on frontend/app/types/recipe.data.ts format
 RECIPES = [
+    {
+        "title": "Steamed Cabbage and Mushrooms",
+        "ingredients": [
+            "Mushrooms",
+            "Cabbage",
+            "Salt",
+            "Pepper",
+            "Garlic",
+            "Soy Sauce",
+            "Water",
+        ],
+        "method": [
+            "In a medium bowl, combine mushrooms, cabbage, salt, pepper, garlic, and soy sauce. Mix well.",
+            "Bring water to a boil in a large pot. Place the bowl with the mushroom mixture in the pot, cover, and let it simmer for 5 minutes.",
+            "Stir the mixture once or twice to ensure the mushrooms are cooked evenly.",
+            "Serve hot and enjoy!",
+        ],
+        "diet_label": "Healthy",
+        "nutrition": {
+            "total_weight_g": 863.75,
+            "recipe_per_100g": {
+                "calories_kcal": 9.27,
+                "fat_g": 0.62,
+                "carbs_g": 5.23,
+                "protein_g": 2.31,
+                "fiber_g": 2.59,
+                "sugar_g": 0.18,
+            },
+            "summary": "What a wonderful healthy choice! This steamed cabbage and mushrooms dish is incredibly low in calories, making it ideal for weight management. Its impressive fiber content helps keep you feeling full and supports healthy digestion."
+        }
+    },
     {
         "title": "Lentil Soup with Cumin & Coriander",
         "ingredients": [
-            "4 cloves garlic, chopped",
-            "1 small yellow onion, minced",
-            "4 medium carrots, chopped",
-            "4 celery stalks, chopped",
-            "3 tbsp olive oil",
-            "2 cups green or brown lentils, uncooked",
-            "1 tsp cumin",
-            "½ tsp coriander",
-            "8 cups vegetable broth",
+            "Garlic",
+            "Onion",
+            "Carrots",
+            "Celery",
+            "Olive Oil",
+            "Lentils",
+            "Cumin",
+            "Coriander",
+            "Vegetable Broth",
         ],
-        "method": (
-            "Heat olive oil in a large pot over medium heat. Sauté onion and garlic until softened. "
-            "Add carrots, celery, and cumin. Cook for 3 minutes. "
-            "Add lentils and vegetable broth. Bring to a boil. "
-            "Reduce heat and simmer for 25–30 minutes until lentils are tender. "
+        "method": [
+            "Heat olive oil in a large pot over medium heat. Sauté onion and garlic until softened.",
+            "Add carrots, celery, and cumin. Cook for 3 minutes.",
+            "Add lentils and vegetable broth. Bring to a boil.",
+            "Reduce heat and simmer for 25–30 minutes until lentils are tender.",
             "Season with salt, pepper, and coriander. Serve warm."
-        ),
+        ],
         "diet_label": "Vegan",
-        "health_label": "High-Fiber",
-        "cuisine_type": "Mediterranean",
-    },
-    {
-        "title": "Chicken Caesar Salad",
-        "ingredients": [
-            "2 chicken breasts, grilled and sliced",
-            "1 head romaine lettuce, chopped",
-            "50g parmesan cheese, shaved",
-            "1 avocado, sliced",
-            "Caesar dressing to taste",
-            "Croutons (optional)",
-        ],
-        "method": (
-            "Season and grill chicken breasts until cooked through. Rest and slice. "
-            "Wash and chop romaine lettuce into bite-sized pieces. "
-            "Toss lettuce with Caesar dressing. "
-            "Top with chicken, avocado, parmesan, and croutons. "
-            "Serve immediately."
-        ),
-        "diet_label": None,
-        "health_label": "High-Protein",
-        "cuisine_type": "American",
-    },
-    {
-        "title": "Spinach & Bacon Omelette",
-        "ingredients": [
-            "3 large eggs",
-            "2 strips bacon, diced",
-            "1 cup fresh spinach",
-            "¼ onion, diced",
-            "Salt and pepper to taste",
-            "1 tbsp butter",
-        ],
-        "method": (
-            "Cook bacon in a non-stick pan until crispy. Set aside. "
-            "In the same pan, sauté onion until translucent. "
-            "Add spinach and cook until wilted. "
-            "Beat eggs with salt and pepper, pour over vegetables. "
-            "Scatter bacon on top. Fold omelette when edges set. "
-            "Serve hot."
-        ),
-        "diet_label": "Keto",
-        "health_label": "High-Protein",
-        "cuisine_type": "Western",
+        "nutrition": {
+            "total_weight_g": 1200,
+            "recipe_per_100g": {
+                "calories_kcal": 150,
+                "fat_g": 4.5,
+                "carbs_g": 22,
+                "protein_g": 8,
+                "fiber_g": 6,
+                "sugar_g": 2,
+            },
+            "summary": "High-fiber vegan lentil soup that is filling and nutritious."
+        }
     },
 ]
 
-# Pantry items: (ingredient_name, expiry_date_or_None)
 PANTRY_ITEMS = [
-    ("Chicken Breast", date(2026, 3, 12)),
-    ("Beef", date(2026, 3, 15)),
-    ("Milk", date(2026, 3, 16)),
-    ("Eggs", date(2026, 3, 17)),
-    ("Toast", date(2026, 3, 18)),
-    ("Parmesan Cheese", date(2026, 3, 21)),
-    ("Wraps", None),
-    ("Olive Oil", None),
-    ("Onion", None),
+    ("Mushrooms", date(2026, 3, 20)),
+    ("Cabbage", date(2026, 3, 20)),
     ("Garlic", None),
+    ("Onion", None),
     ("Carrots", None),
     ("Celery", None),
+    ("Olive Oil", None),
     ("Lentils", None),
-    ("Romaine Lettuce", None),
-    ("Avocado", None),
-    ("Spinach", None),
-    ("Bacon", None),
-    ("Butter", None),
+    ("Milk", date(2026, 3, 16)),
+    ("Eggs", date(2026, 3, 17)),
+    ("Beef", date(2026, 3, 15)),
 ]
-
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-def _ingredient_name(raw: str) -> str:
-    """Extract the base ingredient name from a recipe ingredient string."""
-    return raw.split(",")[0].strip()
-
 
 # ── Seed logic ─────────────────────────────────────────────────────────────────
 
@@ -141,7 +122,7 @@ def seed():
 
         alice = users[0]
 
-        # ── Pantry ingredients + items for Alice ───────────────────────────────
+        # ── Ingredients + Pantry items for Alice ───────────────────────────────
         for ing_name, expiry in PANTRY_ITEMS:
             ingredient = db.query(Ingredient).filter_by(name=ing_name).first()
             if not ingredient:
@@ -168,29 +149,33 @@ def seed():
             if existing:
                 continue
 
+            # Handle list-based instructions
+            instructions = data["method"]
+            if isinstance(instructions, list):
+                instructions = "\n".join(instructions)
+
             recipe = Recipe(
-                user_id=alice.id,
                 recipe_name=data["title"],
-                content=data["method"],
+                recipe_instructions=instructions,
                 diet_label=data.get("diet_label"),
-                health_label=data.get("health_label"),
-                cuisine_type=data.get("cuisine_type"),
+                nutrition_json=json.dumps(data.get("nutrition", {})),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             db.add(recipe)
             db.flush()
 
-            for idx, raw_ing in enumerate(data["ingredients"]):
-                ing_name = _ingredient_name(raw_ing)
-                ingredient = db.query(Ingredient).filter_by(name=ing_name).first()
+            for raw_ing in data["ingredients"]:
+                # Lookup ingredient
+                ingredient = db.query(Ingredient).filter_by(name=raw_ing).first()
                 if not ingredient:
-                    ingredient = Ingredient(name=ing_name)
+                    ingredient = Ingredient(name=raw_ing)
                     db.add(ingredient)
                     db.flush()
 
                 db.add(RecipeIngredient(
                     recipe_id=recipe.id,
                     ingredient_id=ingredient.id,
-                    order_index=idx,
                 ))
 
             print(f"  Recipe ← {data['title']}")
@@ -204,14 +189,19 @@ def seed():
                 .first()
             )
             if not already_saved:
-                db.add(SavedRecipe(user_id=alice.id, recipe_id=first_recipe.id))
+                db.add(SavedRecipe(
+                    user_id=alice.id, 
+                    recipe_id=first_recipe.id,
+                    saved_at=datetime.now(timezone.utc)
+                ))
                 print(f"  Saved '{first_recipe.recipe_name}' for {alice.name}")
 
         db.commit()
-        print("\nDone.")
+        print("\nSeeding completed successfully.")
 
-    except Exception:
+    except Exception as e:
         db.rollback()
+        print(f"\nSeeding failed: {e}")
         raise
     finally:
         db.close()
